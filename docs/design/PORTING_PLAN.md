@@ -1,5 +1,8 @@
 # agrona-rs initial delivery plan
 
+> Maintainer design record. For package usage, see the
+> [User Guide](../USER_GUIDE.md).
+
 ## Status and decision summary
 
 agrona-rs is an unofficial, idiomatic Rust port of selected Agrona
@@ -23,11 +26,11 @@ be evaluated first. Shared-memory facilities remain deferred.
 The selected components passed the initial G1-G5 review recorded below and
 their public API reviews are closed. Clock implementation and its closed
 cross-platform evidence gate are recorded in
-[`CLOCK_EVIDENCE.md`](CLOCK_EVIDENCE.md).
+[`CLOCK_EVIDENCE.md`](clock/CLOCK_EVIDENCE.md).
 
 The detailed Agent design, compatibility ledger, atomic-ordering contract,
 source layout, and delivery record are maintained in
-[`AGENT_IMPLEMENTATION_PLAN.md`](AGENT_IMPLEMENTATION_PLAN.md).
+[`AGENT_IMPLEMENTATION_PLAN.md`](agent/AGENT_IMPLEMENTATION_PLAN.md).
 
 ## Authority and reference hierarchy
 
@@ -52,7 +55,7 @@ progress class. A Java lock-free path is not implemented with a mutex or lock
 in Rust. Wait-free is claimed only when the reference behavior and the
 complete Rust operation both have a bounded-step justification.
 
-See [`UPSTREAM.md`](../UPSTREAM.md) for revisions and attribution policy.
+See [`UPSTREAM.md`](../../UPSTREAM.md) for revisions and attribution policy.
 
 ## Goals
 
@@ -530,8 +533,8 @@ Completion evidence is an approved API sketch mapping every public item to the
 selection record and Agrona source.
 
 The approved Clock API and its stable requirements are maintained in
-[`CLOCK_SPEC.md`](CLOCK_SPEC.md); lifecycle coverage is tracked in
-[`clock_traceability.toml`](clock_traceability.toml).
+[`CLOCK_SPEC.md`](clock/CLOCK_SPEC.md); lifecycle coverage is tracked in
+[`clock_traceability.toml`](clock/clock_traceability.toml).
 
 ### P2 — Complete Clocks implementation
 
@@ -547,7 +550,7 @@ Do not promote the Clock gate until all five slices pass.
 
 ### P3 — Agent API review
 
-Use [`AGENT_IMPLEMENTATION_PLAN.md`](AGENT_IMPLEMENTATION_PLAN.md) as the P3
+Use [`AGENT_IMPLEMENTATION_PLAN.md`](agent/AGENT_IMPLEMENTATION_PLAN.md) as the P3
 review document. It proposes the exact result and termination model,
 ownership-preserving runner startup and join, error-observer behavior,
 composite aggregation, cooperative stall handling, atomic orderings, and

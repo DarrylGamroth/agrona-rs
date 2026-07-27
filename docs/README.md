@@ -14,15 +14,20 @@ to browse it together with the complete API reference.
 
 ## Maintainer documentation
 
-The remaining documents in this directory are specifications, plans,
-traceability ledgers, and delivery evidence for maintaining compatibility
-with upstream Agrona. They are not required to use the crate.
+Specifications, plans, traceability ledgers, and delivery evidence live under
+[`design/`](design/). They maintain compatibility with upstream Agrona and
+are not required to use the crate.
 
-- [Porting plan](PORTING_PLAN.md)
-- [Ecosystem review](ECOSYSTEM_REVIEW.md)
-- [Agent specification](AGENT_SPEC.md)
-- [Agent implementation plan](AGENT_IMPLEMENTATION_PLAN.md)
-- [Agent evidence](AGENT_EVIDENCE.md)
-- [Clock specification](CLOCK_SPEC.md)
-- [Clock evidence](CLOCK_EVIDENCE.md)
-- [Test matrix](TEST_MATRIX.md)
+- Shared design:
+  - [Porting plan](design/PORTING_PLAN.md)
+  - [Ecosystem review](design/ECOSYSTEM_REVIEW.md)
+  - [Test matrix](design/TEST_MATRIX.md)
+- Agent design:
+  - [Specification](design/agent/AGENT_SPEC.md)
+  - [Implementation plan](design/agent/AGENT_IMPLEMENTATION_PLAN.md)
+  - [Evidence](design/agent/AGENT_EVIDENCE.md)
+  - [Traceability ledger](design/agent/agent_traceability.toml)
+- Clock design:
+  - [Specification](design/clock/CLOCK_SPEC.md)
+  - [Evidence](design/clock/CLOCK_EVIDENCE.md)
+  - [Traceability ledger](design/clock/clock_traceability.toml)

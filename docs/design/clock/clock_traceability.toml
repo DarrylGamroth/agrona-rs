@@ -1,10 +1,11 @@
+# Maintainer traceability ledger for the Clock specification.
 schema_version = 1
-specification_baseline = "docs/CLOCK_SPEC.md active, Agrona d4a47c67258f85b39910c4999da346ead655b736"
-specification_files = ["docs/CLOCK_SPEC.md"]
+specification_baseline = "docs/design/clock/CLOCK_SPEC.md active, Agrona d4a47c67258f85b39910c4999da346ead655b736"
+specification_files = ["docs/design/clock/CLOCK_SPEC.md"]
 
 [[requirements]]
 id = "CLK-DOM-001"
-source = "docs/CLOCK_SPEC.md#clk-dom-001--distinct-time-domains"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-dom-001--distinct-time-domains"
 parent_or_rationale = "DEC-CLOCK-001 distinct epoch and monotonic contracts"
 owner = "clock"
 applicability = "mandatory"
@@ -13,7 +14,7 @@ closure_obligations = ["public-api", "domain-separation", "documentation"]
 implementation_state = "implemented"
 implementation_links = ["src/clock/mod.rs", "src/clock/epoch_clock.rs", "src/clock/epoch_micro_clock.rs", "src/clock/epoch_nano_clock.rs", "src/clock/nano_clock.rs"]
 evidence_state = "validated"
-evidence_links = ["tests/clock_domains.rs", "src/clock/mod.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["tests/clock_domains.rs", "src/clock/mod.rs", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["public-api", "domain-separation", "documentation"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -21,7 +22,7 @@ verified_environment = "Stable Rust on native Linux x86_64/AArch64, macOS AArch6
 
 [[requirements]]
 id = "CLK-SYS-001"
-source = "docs/CLOCK_SPEC.md#clk-sys-001--system-epoch-clocks"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-sys-001--system-epoch-clocks"
 parent_or_rationale = "DEC-CLOCK-001 allocation-free system epoch sources"
 owner = "clock"
 applicability = "mandatory"
@@ -30,7 +31,7 @@ closure_obligations = ["milliseconds", "microseconds", "nanoseconds", "zero-size
 implementation_state = "implemented"
 implementation_links = ["src/clock/system_epoch_clock.rs", "src/clock/system_epoch_micro_clock.rs", "src/clock/system_epoch_nano_clock.rs", "src/clock/system_time.rs"]
 evidence_state = "validated"
-evidence_links = ["src/clock/system_time.rs", "tests/clock_system_epoch_clock.rs", "tests/clock_system_epoch_micro_clock.rs", "tests/clock_system_epoch_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["src/clock/system_time.rs", "tests/clock_system_epoch_clock.rs", "tests/clock_system_epoch_micro_clock.rs", "tests/clock_system_epoch_nano_clock.rs", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["milliseconds", "microseconds", "nanoseconds", "zero-sized", "numeric-boundary"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -38,7 +39,7 @@ verified_environment = "Stable Rust on native Linux x86_64/AArch64, macOS AArch6
 
 [[requirements]]
 id = "CLK-MONO-001"
-source = "docs/CLOCK_SPEC.md#clk-mono-001--system-monotonic-clock"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-mono-001--system-monotonic-clock"
 parent_or_rationale = "DEC-CLOCK-001 elapsed-time source"
 owner = "clock"
 applicability = "mandatory"
@@ -47,7 +48,7 @@ closure_obligations = ["zero-sized", "monotonic-order", "elapsed-time", "wraparo
 implementation_state = "implemented"
 implementation_links = ["src/clock/system_nano_clock.rs"]
 evidence_state = "validated"
-evidence_links = ["src/clock/system_nano_clock.rs", "tests/clock_system_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["src/clock/system_nano_clock.rs", "tests/clock_system_nano_clock.rs", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["zero-sized", "monotonic-order", "elapsed-time", "wraparound"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -55,7 +56,7 @@ verified_environment = "Stable Rust on native Linux x86_64/AArch64, macOS AArch6
 
 [[requirements]]
 id = "CLK-CACHE-001"
-source = "docs/CLOCK_SPEC.md#clk-cache-001--cached-clock-ownership"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-cache-001--cached-clock-ownership"
 parent_or_rationale = "DEC-CLOCK-001 single-writer cached clocks"
 owner = "clock"
 applicability = "mandatory"
@@ -64,7 +65,7 @@ closure_obligations = ["unique-writer", "cloneable-readers", "initial-value", "p
 implementation_state = "implemented"
 implementation_links = ["src/clock/cached_epoch_clock.rs", "src/clock/cached_nano_clock.rs", "src/clock/atomic_clock_value.rs"]
 evidence_state = "validated"
-evidence_links = ["src/clock/cached_epoch_clock.rs", "src/clock/cached_nano_clock.rs", "tests/clock_cached_epoch_clock.rs", "tests/clock_cached_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["src/clock/cached_epoch_clock.rs", "src/clock/cached_nano_clock.rs", "tests/clock_cached_epoch_clock.rs", "tests/clock_cached_nano_clock.rs", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["unique-writer", "cloneable-readers", "initial-value", "provider-contract"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -72,7 +73,7 @@ verified_environment = "Stable Rust on native Linux x86_64/AArch64, macOS AArch6
 
 [[requirements]]
 id = "CLK-CACHE-002"
-source = "docs/CLOCK_SPEC.md#clk-cache-002--cached-clock-publication"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-cache-002--cached-clock-publication"
 parent_or_rationale = "DEC-CLOCK-001 release/acquire publication"
 owner = "clock"
 applicability = "mandatory"
@@ -81,7 +82,7 @@ closure_obligations = ["update", "advance", "wraparound", "release-acquire", "co
 implementation_state = "implemented"
 implementation_links = ["src/clock/cached_epoch_clock.rs", "src/clock/cached_nano_clock.rs", "src/clock/atomic_clock_value.rs"]
 evidence_state = "validated"
-evidence_links = ["src/clock/atomic_clock_value.rs", "tests/clock_cached_epoch_clock.rs", "tests/clock_cached_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["src/clock/atomic_clock_value.rs", "tests/clock_cached_epoch_clock.rs", "tests/clock_cached_nano_clock.rs", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["update", "advance", "wraparound", "release-acquire", "concurrency"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -89,7 +90,7 @@ verified_environment = "Stable Rust on native Linux x86_64/AArch64, macOS AArch6
 
 [[requirements]]
 id = "CLK-OFFSET-001"
-source = "docs/CLOCK_SPEC.md#clk-offset-001--offset-configuration-and-construction"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-offset-001--offset-configuration-and-construction"
 parent_or_rationale = "DEC-CLOCK-001 bounded offset sampling configuration"
 owner = "clock"
 applicability = "mandatory"
@@ -98,7 +99,7 @@ closure_obligations = ["defaults", "retry-boundary", "threshold-boundary", "inte
 implementation_state = "implemented"
 implementation_links = ["src/clock/offset_epoch_nano_clock.rs"]
 evidence_state = "validated"
-evidence_links = ["tests/clock_offset_epoch_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["tests/clock_offset_epoch_nano_clock.rs", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["defaults", "retry-boundary", "threshold-boundary", "interval-boundary", "construction-error"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -106,7 +107,7 @@ verified_environment = "Stable Rust on native Linux x86_64/AArch64, macOS AArch6
 
 [[requirements]]
 id = "CLK-OFFSET-002"
-source = "docs/CLOCK_SPEC.md#clk-offset-002--offset-sampling"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-offset-002--offset-sampling"
 parent_or_rationale = "DEC-CLOCK-001 Agrona offset sampling behavior"
 owner = "clock"
 applicability = "mandatory"
@@ -115,7 +116,7 @@ closure_obligations = ["sample-order", "midpoint", "strict-threshold", "narrowes
 implementation_state = "implemented"
 implementation_links = ["src/clock/offset_epoch_nano_clock.rs"]
 evidence_state = "validated"
-evidence_links = ["tests/clock_offset_epoch_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["tests/clock_offset_epoch_nano_clock.rs", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["sample-order", "midpoint", "strict-threshold", "narrowest-fallback", "bounded-retries", "no-valid-sample"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -123,7 +124,7 @@ verified_environment = "Stable Rust on native Linux x86_64/AArch64, macOS AArch6
 
 [[requirements]]
 id = "CLK-OFFSET-003"
-source = "docs/CLOCK_SPEC.md#clk-offset-003--coherent-offset-reads-and-resampling"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-offset-003--coherent-offset-reads-and-resampling"
 parent_or_rationale = "Agrona Java volatile immutable TimeFields publication without sampling serialization"
 owner = "clock"
 applicability = "mandatory"
@@ -132,7 +133,7 @@ closure_obligations = ["immutable-snapshot", "atomic-replacement", "wait-free-sn
 implementation_state = "implemented"
 implementation_links = ["src/clock/offset_epoch_nano_clock.rs", "Cargo.lock"]
 evidence_state = "validated"
-evidence_links = ["src/clock/offset_epoch_nano_clock.rs", "tests/clock_offset_epoch_nano_clock.rs", "tests/clock_allocation.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["src/clock/offset_epoch_nano_clock.rs", "tests/clock_offset_epoch_nano_clock.rs", "tests/clock_allocation.rs", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["immutable-snapshot", "atomic-replacement", "wait-free-snapshot-load", "normal-read", "interval-resample", "backward-resample", "x86_64-ordering", "aarch64-ordering"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -140,7 +141,7 @@ verified_environment = "Stable Rust on native Linux x86_64/AArch64, macOS AArch6
 
 [[requirements]]
 id = "CLK-OFFSET-004"
-source = "docs/CLOCK_SPEC.md#clk-offset-004--automatic-resampling-failure"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-offset-004--automatic-resampling-failure"
 parent_or_rationale = "Rust adaptation for a fallible injected monotonic source"
 owner = "clock"
 applicability = "mandatory"
@@ -149,7 +150,7 @@ closure_obligations = ["automatic-failure", "sample-retention", "explicit-error"
 implementation_state = "implemented"
 implementation_links = ["src/clock/offset_epoch_nano_clock.rs"]
 evidence_state = "validated"
-evidence_links = ["tests/clock_offset_epoch_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["tests/clock_offset_epoch_nano_clock.rs", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["automatic-failure", "sample-retention", "explicit-error"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -157,7 +158,7 @@ verified_environment = "Stable Rust on native Linux x86_64/AArch64, macOS AArch6
 
 [[requirements]]
 id = "CLK-OFFSET-005"
-source = "docs/CLOCK_SPEC.md#clk-offset-005--non-serialized-sampling"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-offset-005--non-serialized-sampling"
 parent_or_rationale = "Agrona Java permits concurrent sample calls and atomically publishes each immutable TimeFields result"
 owner = "clock"
 applicability = "mandatory"
@@ -166,7 +167,7 @@ closure_obligations = ["no-sampling-lock", "overlapping-sampling", "last-replace
 implementation_state = "implemented"
 implementation_links = ["src/clock/offset_epoch_nano_clock.rs", "Cargo.lock"]
 evidence_state = "validated"
-evidence_links = ["src/clock/offset_epoch_nano_clock.rs", "tests/clock_offset_epoch_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["src/clock/offset_epoch_nano_clock.rs", "tests/clock_offset_epoch_nano_clock.rs", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["no-sampling-lock", "overlapping-sampling", "last-replacement-wins", "panic-recovery", "concurrent-readers"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -174,7 +175,7 @@ verified_environment = "Stable Rust on native Linux x86_64/AArch64, macOS AArch6
 
 [[requirements]]
 id = "CLK-ALLOC-001"
-source = "docs/CLOCK_SPEC.md#clk-alloc-001--steady-state-allocation"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-alloc-001--steady-state-allocation"
 parent_or_rationale = "DEC-CLOCK-001 predictable steady-state latency"
 owner = "clock"
 applicability = "mandatory"
@@ -183,7 +184,7 @@ closure_obligations = ["system-read", "cached-read", "cached-update", "cached-ad
 implementation_state = "implemented"
 implementation_links = ["src/clock/system_epoch_clock.rs", "src/clock/system_epoch_micro_clock.rs", "src/clock/system_epoch_nano_clock.rs", "src/clock/system_nano_clock.rs", "src/clock/cached_epoch_clock.rs", "src/clock/cached_nano_clock.rs", "src/clock/offset_epoch_nano_clock.rs"]
 evidence_state = "validated"
-evidence_links = ["tests/clock_allocation.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["tests/clock_allocation.rs", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["system-read", "cached-read", "cached-update", "cached-advance", "offset-read", "status-read"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -191,7 +192,7 @@ verified_environment = "Stable Rust on native Linux x86_64/AArch64, macOS AArch6
 
 [[requirements]]
 id = "CLK-PORT-001"
-source = "docs/CLOCK_SPEC.md#clk-port-001--supported-implementation-profile"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-port-001--supported-implementation-profile"
 parent_or_rationale = "agrona-rs initial platform and safety profile"
 owner = "clock"
 applicability = "mandatory"
@@ -200,7 +201,7 @@ closure_obligations = ["safe-library", "std", "atomic64", "rust-1.85", "three-os
 implementation_state = "implemented"
 implementation_links = ["src/clock/mod.rs", ".github/workflows/ci.yml", "Cargo.toml"]
 evidence_state = "validated"
-evidence_links = ["docs/CLOCK_EVIDENCE.md", ".github/workflows/ci.yml"]
+evidence_links = ["docs/design/clock/CLOCK_EVIDENCE.md", ".github/workflows/ci.yml"]
 verified_obligations = ["safe-library", "std", "atomic64", "rust-1.85", "three-os-ci"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -208,7 +209,7 @@ verified_environment = "Stable Rust and Rust 1.85 on Linux x86_64; stable Rust o
 
 [[requirements]]
 id = "CLK-PORT-002"
-source = "docs/CLOCK_SPEC.md#clk-port-002--native-architecture-validation"
+source = "docs/design/clock/CLOCK_SPEC.md#clk-port-002--native-architecture-validation"
 parent_or_rationale = "Weak-memory publication must execute natively on both strong- and weak-order CPU architectures"
 owner = "clock"
 applicability = "mandatory"
@@ -217,7 +218,7 @@ closure_obligations = ["concurrency-suite-x86_64", "concurrency-suite-aarch64"]
 implementation_state = "implemented"
 implementation_links = [".github/workflows/ci.yml"]
 evidence_state = "validated"
-evidence_links = [".github/workflows/ci.yml", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = [".github/workflows/ci.yml", "docs/design/clock/CLOCK_EVIDENCE.md"]
 verified_obligations = ["concurrency-suite-x86_64", "concurrency-suite-aarch64"]
 verified_surfaces = ["native-x86_64", "native-aarch64"]
 verified_revision = "11193e1fe9bc0a3e4beac42ac1d9b26fc43eaed2, GitHub Actions run 30305348451"
@@ -241,4 +242,4 @@ requirements = [
     "CLK-PORT-002",
 ]
 state = "complete"
-acceptance_evidence = ["docs/CLOCK_EVIDENCE.md"]
+acceptance_evidence = ["docs/design/clock/CLOCK_EVIDENCE.md"]

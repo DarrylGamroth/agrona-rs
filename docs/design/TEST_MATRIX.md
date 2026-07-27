@@ -1,5 +1,8 @@
 # Test and CI matrix
 
+> Maintainer verification record. For package usage, see the
+> [User Guide](../USER_GUIDE.md).
+
 This matrix records the supported configurations exercised by automated tests.
 It should be updated whenever the minimum Rust version, feature set, or
 supported platform set changes.

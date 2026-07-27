@@ -1,5 +1,8 @@
 # Agent implementation plan
 
+> Maintainer design record. For package usage, see the
+> [User Guide](../../USER_GUIDE.md).
+
 ## Status
 
 This is the maintained design and delivery record for the selected Agrona

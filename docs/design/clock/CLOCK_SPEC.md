@@ -1,5 +1,8 @@
 # agrona-rs Clock specification
 
+> Maintainer specification. For package usage, see the
+> [User Guide](../../USER_GUIDE.md).
+
 Status: active
 
 Baseline: Agrona Java commit
@@ -11,7 +14,7 @@ targets with native 64-bit atomics.
 ## Purpose and authority
 
 This document is the normative Rust contract for the Clock increment selected
-by `DEC-CLOCK-001` in the [initial delivery plan](PORTING_PLAN.md). Agrona Java
+by `DEC-CLOCK-001` in the [initial delivery plan](../PORTING_PLAN.md). Agrona Java
 is the behavioral reference. The delivery plan owns roadmap priority and
 component boundaries; this document owns the Clock API and behavior.
 
