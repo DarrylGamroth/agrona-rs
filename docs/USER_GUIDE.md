@@ -247,6 +247,65 @@ Do not simply drop a live `AgentRunnerHandle`: like `std::thread::JoinHandle`,
 that detaches the worker without requesting stop and loses deterministic
 cleanup.
 
+### Worker initialization
+
+`start_with_thread_initializer` runs a caller-supplied initializer once on the
+worker thread before `Agent::on_start`. Use it for thread-local deployment
+configuration such as CPU affinity, scheduling policy, or thread-local
+runtime setup:
+
+```rust
+use std::error::Error;
+
+use agrona::agent::{
+    Agent, AgentResult, AgentRunner, AgentTermination, BoxError,
+    NoOpIdleStrategy,
+};
+
+struct Service;
+
+impl Agent for Service {
+    fn role_name(&self) -> &str {
+        "pinned-service"
+    }
+
+    fn do_work(&mut self) -> AgentResult {
+        Err(AgentTermination::expected().into())
+    }
+}
+
+fn ignore_error(_: &(dyn Error + Send + Sync + 'static)) {}
+
+# fn main() -> Result<(), Box<dyn Error>> {
+let runner = AgentRunner::new(
+    Service,
+    NoOpIdleStrategy,
+    ignore_error,
+    None,
+);
+
+let handle = runner.start_with_thread_initializer(|| -> Result<(), BoxError> {
+    // Apply application- or platform-specific worker configuration here.
+    Ok(())
+})?;
+let _service = handle.join()?;
+# Ok(())
+# }
+```
+
+An initializer error is reported through the runner's error handler. It
+prevents `Agent::on_start` and `do_work`, then the runner still attempts
+`Agent::on_close`. An initializer panic is fatal and is returned through
+`join` after cleanup is attempted. Initialization adds no callback, branch,
+or allocation to the steady-state duty-cycle loop.
+
+This is the Rust equivalent of Agrona Java's `ThreadFactory` customization
+point. The crate does not select an affinity library or impose operating
+system policy. Applications can call their chosen platform integration from
+the initializer. Every sub-agent in a `CompositeAgent` runs on the same
+owning thread and therefore shares its thread configuration; use separate
+runners when Agents need different placement.
+
 ### Caller-driven execution with `AgentInvoker`
 
 Use `AgentInvoker` when an existing thread or event loop should own the duty
@@ -385,8 +444,8 @@ fails.
 
 The crate does not currently implement shared-memory buffers, counters,
 queues, ring buffers, or control structures. It also does not provide
-`DynamicCompositeAgent`, CPU affinity, async integration, or `no_std`
-support.
+`DynamicCompositeAgent`, CPU affinity, automatic CPU reservation,
+scheduling-priority or NUMA policy, async integration, or `no_std` support.
 
 For exact public types and methods, build and open the API documentation:
 

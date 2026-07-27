@@ -32,6 +32,7 @@ x86_64 and AArch64 evidence for Linux, macOS, and Windows.
 | `AGT-INV-001` | Caller-owned, internally unlocked state machine; start-once, close-once, error, termination, and panic tests pass. |
 | `AGT-RUN-001` | Named dedicated thread, serialized lifecycle, and `idle(do_work())` loop; allocation instrumentation reports no steady-state allocations. |
 | `AGT-RUN-002` | Release/acquire cooperative stop, unpark, ownership-preserving spawn failure, structured panic return, and retry diagnostics all pass locally. |
+| `AGT-RUN-003` | Worker initialization ordering, recoverable failure, and fatal panic cleanup tests pass locally. Cross-platform CI remains pending for this post-baseline extension. |
 | `AGT-COMP-001` | Non-empty construction, exact role, all-agent lifecycle attempts, and ordered aggregation pass. |
 | `AGT-COMP-002` | Pre-call cursor advance, resume-after-error, reset, wrapping `i32` sum, and allocation behavior pass. |
 | `AGT-IDLE-001` | Work-count, reset, idle-step, and alias contracts are exercised per component. |
@@ -47,6 +48,8 @@ The worker calls Agent and idle callbacks through unique mutable ownership.
 Its steady-state loop has no mutex, channel operation, or allocation. The
 zero-capacity channel in `AgentRunner::start_with_builder` exists only until
 the OS thread is successfully created and ownership has transferred.
+The optional initializer executes once before `Agent::on_start` and is not
+retained by the steady-state loop.
 
 `request_stop` release-stores `false`; the worker acquire-loads the flag on
 every loop. It also unparks the worker so park-based strategies do not wait
@@ -76,7 +79,7 @@ cargo +1.85.0 check --workspace --all-targets --all-features
 cargo llvm-cov --workspace --all-features --summary-only
 ```
 
-The complete crate reports 94.66% line coverage locally. Agent tests are kept
+The complete crate reports 94.90% line coverage locally. Agent tests are kept
 in separate component files, with private unit tests used only for exact
 backoff state inspection.
 

@@ -112,6 +112,24 @@ verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; 
 remaining_gaps = []
 
 [[requirements]]
+id = "AGT-RUN-003"
+source = "docs/design/agent/AGENT_SPEC.md#agt-run-003--worker-initialization"
+parent_or_rationale = "Java ThreadFactory extension point"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["worker-before-start", "initializer-error", "initializer-panic", "no-hot-path-change"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/agent_runner.rs"]
+evidence_state = "local-validated"
+evidence_links = ["tests/agent_runner_thread_initializer.rs", "tests/agent_allocation.rs", "docs/design/agent/AGENT_EVIDENCE.md"]
+verified_obligations = ["worker-before-start", "initializer-error", "initializer-panic", "no-hot-path-change"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree 2026-07-27"
+verified_environment = "Local Linux x86_64; Rust stable; full all-features test suite"
+remaining_gaps = ["GitHub native Linux AArch64, macOS, and Windows evidence"]
+
+[[requirements]]
 id = "AGT-COMP-001"
 source = "docs/design/agent/AGENT_SPEC.md#agt-comp-001--static-composite-lifecycle"
 parent_or_rationale = "Agrona CompositeAgent lifecycle behavior"

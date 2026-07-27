@@ -20,10 +20,12 @@ The selected scope is fixed:
 - static composition; and
 - all seven Agrona idle strategies.
 
-Shared-memory counters and controls remain deferred. CPU affinity, scheduling
-priority, async runtimes, and forced thread cancellation are not part of this
-increment. `DynamicCompositeAgent` and its cross-thread add/remove protocol
-are not selected.
+Shared-memory counters and controls remain deferred. CPU affinity, CPU
+reservation, scheduling priority, async runtimes, and forced thread
+cancellation are not part of this increment. A worker initializer provides
+the Java-equivalent customization point for application-selected thread
+configuration. `DynamicCompositeAgent` and its cross-thread add/remove
+protocol are not selected.
 
 ## Authority and evidence
 
@@ -105,7 +107,8 @@ separate wake or cancellation mechanism that makes shutdown bounded.
 
 Busy-spin and no-op idling require a genuinely available CPU and an explicit
 power budget. The crate will not imply that creating an OS thread reserves a
-core, sets affinity, or establishes real-time scheduling.
+core, sets affinity, or establishes real-time scheduling. Applications can
+apply their chosen platform integration through the worker initializer.
 
 ## Compatibility ledger
 
@@ -138,6 +141,7 @@ core, sets affinity, or establishes real-time scheduling.
 | `Thread.interrupt()` | Stop is cooperative. The runner release-publishes stop and unparks its worker, but cannot cancel arbitrary blocking code. |
 | Shared-memory `AtomicCounter` | An optional process-local counter uses a Rust atomic and has no Agrona shared-memory layout. |
 | Java `Thread` retains a runner object | Starting consumes the Rust runner and returns a handle; joining returns the owned Agent. |
+| Java `ThreadFactory` customizes worker creation | `start_with_builder_and_thread_initializer` combines standard Rust thread configuration with a startup closure that runs on the worker before `Agent::on_start`. |
 | Java suppressed exceptions | A composite error owns the ordered list of recoverable sub-agent errors. |
 
 ### Unsupported Java states
@@ -280,6 +284,16 @@ strategy, the error handler, and the optional counter. Starting consumes it
 and returns `AgentRunnerHandle<A>`. Consuming start provides start-once
 semantics through ownership rather than a reusable state machine. The worker
 OS thread is named from the Agent role before `on_start`.
+
+`start_with_thread_initializer` accepts a one-shot worker initializer.
+`start_with_builder_and_thread_initializer` combines it with a caller-configured
+`std::thread::Builder`. The initializer runs on the named worker after
+ownership transfer and immediately before `Agent::on_start`. A recoverable
+initializer error is reported without incrementing the work-error counter,
+prevents Agent startup and duty cycles, and is followed by one cleanup
+attempt. A panic remains fatal and follows the runner's normal
+panic-and-cleanup path. No initializer value, branch, callback, or syscall is
+retained in the steady-state loop.
 
 The start operation must preserve the complete unstarted runner on OS thread
 creation failure. The preferred safe design is a bootstrap thread plus a

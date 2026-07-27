@@ -10,8 +10,8 @@ use std::sync::mpsc::sync_channel;
 use std::thread;
 
 use super::{
-    Agent, AgentError, AgentErrorCounter, AgentRunnerHandle, AgentRunnerStartError, ErrorHandler,
-    IdleStrategy,
+    Agent, AgentError, AgentErrorCounter, AgentRunnerHandle, AgentRunnerStartError, BoxError,
+    ErrorHandler, IdleStrategy,
 };
 
 /// An unstarted dedicated-thread Agent owner.
@@ -54,6 +54,22 @@ impl<A: Agent, I: IdleStrategy, H: ErrorHandler> AgentRunner<A, I, H> {
         self.start_with_builder(thread::Builder::new())
     }
 
+    /// Starts the runner after initializing its worker thread.
+    ///
+    /// The initializer runs once on the worker thread, before
+    /// [`Agent::on_start`]. An initializer error is reported to the runner's
+    /// error handler, prevents Agent startup and duty cycles, and is followed
+    /// by [`Agent::on_close`].
+    pub fn start_with_thread_initializer<F>(
+        self,
+        initializer: F,
+    ) -> Result<AgentRunnerHandle<A>, AgentRunnerStartError<AgentRunner<A, I, H>>>
+    where
+        F: FnOnce() -> Result<(), BoxError> + Send + 'static,
+    {
+        self.start_with_builder_and_thread_initializer(thread::Builder::new(), initializer)
+    }
+
     /// Starts the runner with a caller-configured thread builder.
     ///
     /// The Agent role always becomes the thread name. Stack-size and other
@@ -62,6 +78,21 @@ impl<A: Agent, I: IdleStrategy, H: ErrorHandler> AgentRunner<A, I, H> {
         self,
         builder: thread::Builder,
     ) -> Result<AgentRunnerHandle<A>, AgentRunnerStartError<AgentRunner<A, I, H>>> {
+        self.start_with_builder_and_thread_initializer(builder, || Ok(()))
+    }
+
+    /// Starts the runner with a configured builder and worker initializer.
+    ///
+    /// This combines the behavior of [`Self::start_with_builder`] and
+    /// [`Self::start_with_thread_initializer`].
+    pub fn start_with_builder_and_thread_initializer<F>(
+        self,
+        builder: thread::Builder,
+        initializer: F,
+    ) -> Result<AgentRunnerHandle<A>, AgentRunnerStartError<AgentRunner<A, I, H>>>
+    where
+        F: FnOnce() -> Result<(), BoxError> + Send + 'static,
+    {
         let role_name = self.agent.role_name().to_owned();
         let running = Arc::new(AtomicBool::new(true));
         let closed = Arc::new(AtomicBool::new(false));
@@ -73,7 +104,7 @@ impl<A: Agent, I: IdleStrategy, H: ErrorHandler> AgentRunner<A, I, H> {
             let runner = receiver
                 .recv()
                 .expect("Agent runner bootstrap sender dropped unexpectedly");
-            run(runner, &worker_running, &worker_closed)
+            run(runner, &worker_running, &worker_closed, initializer)
         }) {
             Ok(handle) => handle,
             Err(error) => {
@@ -120,11 +151,15 @@ pub(crate) struct RunnerOutcome<A> {
     pub(crate) close_panic: Option<Box<dyn std::any::Any + Send>>,
 }
 
-fn run<A: Agent, I: IdleStrategy, H: ErrorHandler>(
+fn run<A: Agent, I: IdleStrategy, H: ErrorHandler, F>(
     runner: AgentRunner<A, I, H>,
     running: &AtomicBool,
     closed: &AtomicBool,
-) -> RunnerOutcome<A> {
+    initializer: F,
+) -> RunnerOutcome<A>
+where
+    F: FnOnce() -> Result<(), BoxError>,
+{
     let AgentRunner {
         mut agent,
         mut idle_strategy,
@@ -133,7 +168,7 @@ fn run<A: Agent, I: IdleStrategy, H: ErrorHandler>(
     } = runner;
 
     let primary_panic = catch_unwind(AssertUnwindSafe(|| {
-        if let Err(error) = agent.on_start() {
+        if let Err(error) = initializer().and_then(|()| agent.on_start()) {
             running.store(false, Ordering::Release);
             error_handler.on_error(error.as_ref());
         }
