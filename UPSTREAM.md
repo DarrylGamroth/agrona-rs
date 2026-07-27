@@ -26,6 +26,14 @@ revision:
 The corresponding Rust implementation is under `src/clock/`. Behavioral and
 allocation evidence is recorded in `docs/CLOCK_EVIDENCE.md`.
 
+The Agent implementation maps to Agrona's `Agent`,
+`AgentTerminationException`, `AgentInvoker`, `AgentRunner`,
+`CompositeAgent`, `IdleStrategy`, `BackoffIdleStrategy`,
+`BusySpinIdleStrategy`, `ControllableIdleStrategy`, `NoOpIdleStrategy`,
+`SleepingIdleStrategy`, `SleepingMillisIdleStrategy`, and
+`YieldingIdleStrategy`. The corresponding Rust implementation is under
+`src/agent/`; `DynamicCompositeAgent` is intentionally omitted.
+
 ## Reference hierarchy
 
 Agrona Java at the commit above is the normative behavioral reference for
@@ -34,7 +42,10 @@ selected ports.
 The Agent design also reviews Aeron C at commit
 `e44cd27a3b357c27ad37f6107a957f46d95552ac` as an implementation reference for
 native ownership, thread lifecycle, atomic stop publication, and idle
-primitives. Aeron C does not override Agrona Java behavior or defaults.
+primitives. The applicable files are
+`aeron-client/src/main/c/aeron_agent.h` and
+`aeron-client/src/main/c/aeron_agent.c`. Aeron C does not override Agrona Java
+behavior or defaults.
 
 The sibling Julia packages are examples of language-specific ports:
 

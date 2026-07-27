@@ -3,8 +3,8 @@
 ## Status and decision summary
 
 agrona-rs is an unofficial, idiomatic Rust port of selected Agrona
-low-latency building blocks. The Clock family is implemented; the Agent
-family is the next implementation increment.
+low-latency building blocks. The Clock family and selected Agent family are
+implemented.
 
 This plan selects two initial component families:
 
@@ -14,18 +14,20 @@ This plan selects two initial component families:
 
 The completed Clocks increment includes epoch, monotonic, system, cached, and
 offset epoch clocks. The Agent increment includes the Agent protocol, runner,
-invoker, static and dynamic composites, termination and error behavior, and
-all seven Agrona idle strategies.
+invoker, static composite, termination and error behavior, and all seven
+Agrona idle strategies. `DynamicCompositeAgent` is not selected.
 
 Snowflake IDs are not selected for a port. Existing Rust implementations must
 be evaluated first. Shared-memory facilities remain deferred.
 
-The selected components passed the initial G1-G5 review recorded below.
-Public API review is still required at the beginning of each implementation
-increment, but component selection is no longer open. Clock implementation
-and local Linux evidence are recorded in
-[`CLOCK_EVIDENCE.md`](CLOCK_EVIDENCE.md); its cross-platform evidence gate
-remains partial until CI runs the current tree on macOS and Windows.
+The selected components passed the initial G1-G5 review recorded below and
+their public API reviews are closed. Clock implementation and its closed
+cross-platform evidence gate are recorded in
+[`CLOCK_EVIDENCE.md`](CLOCK_EVIDENCE.md).
+
+The detailed Agent design, compatibility ledger, atomic-ordering contract,
+source layout, and delivery record are maintained in
+[`AGENT_IMPLEMENTATION_PLAN.md`](AGENT_IMPLEMENTATION_PLAN.md).
 
 ## Authority and reference hierarchy
 
@@ -110,7 +112,7 @@ flowchart LR
     G1["G1: Clock acceptance"]
     P3["P3: Agent API review"]
     P4["P4: Agent core"]
-    P5["P5: Composites"]
+    P5["P5: Static composite"]
     P6["P6: Idle strategies"]
     G2["G2: Agent acceptance"]
     Later["Later component selection"]
@@ -129,7 +131,7 @@ flowchart LR
 
 Clock acceptance requires the complete selected clock family; implementing
 only system clocks does not close the gate. Agent acceptance requires the
-complete Agent surface and every selected idle strategy; implementing only a
+complete selected Agent surface and every idle strategy; implementing only a
 runner does not close that gate.
 
 ## Selection record: Clocks
@@ -260,7 +262,7 @@ reader can observe a torn offset sample.
 
 ## Selection record: Agents
 
-### DEC-AGENT-001 — Select the complete Agent family
+### DEC-AGENT-001 — Select the initial Agent surface
 
 #### G1 — Concrete use case
 
@@ -272,7 +274,6 @@ that supports:
 - bounded work reporting;
 - idle behavior selected for the deployment;
 - composition of multiple duties on one owner thread;
-- dynamic, bounded control requests for adding and removing duties;
 - cooperative stop and deterministic cleanup; and
 - error observation without imposing an async runtime.
 
@@ -286,9 +287,11 @@ Rust threads and general actor frameworks do not provide Agrona's complete
 Agent, invoker, composite, cursor, lifecycle, error, and idle contracts.
 The reviewed `idle` crate does not provide the complete idle-strategy family.
 
-The Agent family and all idle strategies are selected for implementation.
-`core_affinity` is not selected as a mandatory dependency. Affinity can be
-added later as an optional deployment facility after its dependency review.
+The Agent protocol, runner, invoker, static composite, and all idle
+strategies are selected for implementation. `DynamicCompositeAgent` is not
+selected. `core_affinity` is not selected as a mandatory dependency.
+Affinity can be added later as an optional deployment facility after its
+dependency review.
 
 #### G3 — Compatibility
 
@@ -300,8 +303,6 @@ The following Java mechanisms require explicit Rust adaptations:
 - `Throwable` becomes a fallible Agent contract plus fatal Rust panic policy.
 - `AgentTerminationException` becomes an explicit termination outcome carrying
   the expected/unexpected distinction.
-- Java object identity for dynamic removal becomes a stable Rust `AgentId`
-  because ownership transfers into the composite.
 - Java thread interruption has no safe Rust equivalent. Stop publication is
   cooperative and cannot forcibly cancel a blocking `do_work`.
 - Agrona shared-memory `AtomicCounter` is not pulled into scope. Error counts,
@@ -364,10 +365,10 @@ stop request with release ordering and the worker observes it with acquire
 ordering.
 
 `request_stop` is non-blocking. `join` waits for cleanup and returns the owned
-Agent or a structured runner failure. A timed close may report a stall and
-remain retryable, but it cannot interrupt or detach the running Agent
-silently. Closing before start calls `on_close` exactly once without spawning
-a thread.
+Agent or a structured runner failure. A Java-close-equivalent join may report
+repeated stalls while continuing to wait, but it cannot interrupt or detach
+the running Agent silently. Closing before start calls `on_close` exactly once
+without spawning a thread.
 
 The common loop is:
 
@@ -400,37 +401,6 @@ reporting rules as `AgentRunner`.
 - `on_close` attempts every sub-agent and aggregates failures.
 - The steady-state successful `do_work` path does not allocate.
 
-##### DynamicCompositeAgent
-
-`DynamicCompositeAgent` has one duty-cycle owner. A separate controller sends
-non-blocking control requests.
-
-```mermaid
-flowchart LR
-    Producers["Controller clones"]
-    Add["One pending add slot"]
-    Remove["One pending remove slot"]
-    Owner["DynamicCompositeAgent owner"]
-    Agents["Owned Agent list"]
-
-    Producers -->|try_add with ownership| Add
-    Producers -->|try_remove by AgentId| Remove
-    Add -->|consume before work| Owner
-    Remove -->|consume before work| Owner
-    Owner --> Agents
-```
-
-There is capacity for one pending add and one pending remove, matching
-Agrona's bounded independent request slots. A full slot returns the original
-request to the caller without blocking. Accepted adds receive a stable
-`AgentId`; removals use that ID rather than object identity. Lifecycle methods
-for added or removed Agents run only on the composite owner.
-
-The owner processes add before remove. A failed added Agent is closed and not
-inserted. Removal closes the matching Agent and removes it even if close
-fails. Dynamic growth and shrinkage may allocate on the control path; the
-ordinary duty-cycle traversal does not allocate.
-
 ##### Idle strategies
 
 `IdleStrategy` is a mutable strategy owned by one runner. It supports idling
@@ -449,10 +419,11 @@ All Agrona strategies are in scope:
 | `SleepingMillisIdleStrategy` | Sleep for a configured millisecond `Duration` when no work was done. |
 | `YieldingIdleStrategy` | Call `std::thread::yield_now` when no work was done. |
 
-Constructors use `Duration` where practical and validate backoff ranges.
-Backoff uses saturating or checked doubling so overflow cannot reduce the
-configured park interval. The controllable strategy uses an in-process atomic
-control handle; it does not depend on deferred Agrona counters.
+Constructors use `Duration` where practical. The Rust duration domain and
+Java-compatible backoff arithmetic must be approved during P3. The port does
+not invent spin/yield/range validation that the Java constructors do not
+perform. The controllable strategy uses an in-process atomic control handle;
+it does not depend on deferred Agrona counters.
 
 #### G5 — Acceptance evidence
 
@@ -463,8 +434,6 @@ Agent acceptance requires tests derived from Agrona Java behavior for:
 - startup, work, termination, handler, cleanup, and panic paths;
 - invoker state transitions and idempotent close;
 - static composite startup/cleanup aggregation and work cursor recovery;
-- dynamic status, bounded add/remove slots, add-before-remove ordering,
-  identity replacement by `AgentId`, and lifecycle failure paths;
 - every idle strategy's work-count behavior, reset, defaults, aliases, and
   configuration boundaries;
 - concurrent stop publication and controllable-mode publication;
@@ -483,8 +452,8 @@ no-op measurements must record core placement and whether the core was
 reserved. No cross-language performance equivalence claim is planned.
 
 The gate fails if cleanup can be skipped on an ordinary lifecycle path, a
-stateful idle strategy is concurrently shared by the library, dynamic control
-becomes unbounded, or successful steady-state duty cycles allocate.
+stateful idle strategy is concurrently shared by the library, or successful
+steady-state duty cycles allocate.
 
 ## Other component dispositions
 
@@ -578,47 +547,39 @@ Do not promote the Clock gate until all five slices pass.
 
 ### P3 — Agent API review
 
-Likely files:
+Use [`AGENT_IMPLEMENTATION_PLAN.md`](AGENT_IMPLEMENTATION_PLAN.md) as the P3
+review document. It proposes the exact result and termination model,
+ownership-preserving runner startup and join, error-observer behavior,
+composite aggregation, cooperative stall handling, atomic orderings, and
+Java-like one-public-component-per-file layout.
 
-- `src/agent/mod.rs`;
-- `src/agent/error.rs`;
-- `src/agent/runner.rs`;
-- `src/agent/invoker.rs`;
-- `src/agent/composite.rs`;
-- `src/agent/dynamic_composite.rs`;
-- `src/agent/idle.rs`; and
-- `tests/agent_*.rs`.
-
-Review exact result and termination types, runner ownership on spawn failure
-and join, error-observer behavior, composite error aggregation, `AgentId`
-lifecycle, dynamic controller capacity, and timeout behavior against
-DEC-AGENT-001.
+P3 closed when its A0 contract and dependency review were approved. Agent
+source was implemented only after that review.
 
 ### P4 — Agent core
 
-Implement the Agent contract, error and termination model, `AgentInvoker`, and
-`AgentRunner`, including lifecycle and shutdown evidence.
+Implemented the Agent contract, error and termination model, `AgentInvoker`,
+and `AgentRunner`, including lifecycle and shutdown evidence.
 
-### P5 — Static and dynamic composites
+### P5 — Static composite
 
-Implement composite cursor and failure behavior first, then the bounded
-dynamic controller and `AgentId` ownership model. Keep control-path
-allocations distinct from steady-state traversal claims.
+Implemented exact composite lifecycle aggregation, work-count accumulation,
+and cursor recovery behavior.
 
 ### P6 — Complete idle-strategy family
 
-Implement the common trait and all seven strategies. Validate Java defaults
-against the recorded Agrona revision. Document deployment costs for no-op,
-spin, yield, and park/sleep choices.
+Implemented the common trait and all seven strategies. Java defaults are
+validated against the recorded Agrona revision; deployment costs for no-op,
+spin, yield, and park/sleep choices are documented.
 
 P5 and P6 may proceed independently after P4, but both must close before Agent
 acceptance.
 
 ### P7 — Agent acceptance and documentation
 
-Run the complete behavior, concurrency, liveness, allocation, platform, and
-benchmark suites. Publish no stronger performance or portability claim than
-the collected evidence supports.
+The complete local behavior, concurrency, liveness, allocation, and benchmark
+suites pass. Cross-platform acceptance remains partial until GitHub CI runs
+the current revision. No stronger portability claim is made.
 
 ## Repository-wide verification
 
@@ -645,26 +606,17 @@ replace them.
 | Cached clocks imply multi-writer safety | Make the writer handle unique and document release/acquire publication. |
 | Rust panics become recoverable Agent errors | Keep panics fatal, attempt cleanup, and propagate through join. |
 | A blocking Agent prevents shutdown | Specify cooperative stop, timed stall reporting, and application wakeup obligations. |
-| Dynamic composition becomes unbounded | Retain independent one-request add and remove capacities. |
 | Busy strategies are deployed without spare CPU | Document core and power requirements and qualify benchmarks. |
 | Shared-memory scope leaks through counters | Use process-local atomics without Agrona layouts or interoperability claims. |
 | “Lock-free” or “zero allocation” is asserted without evidence | Test allocation and concurrency properties and avoid unsupported labels. |
 | Scope expands toward full Agrona | Require a new G1-G5 selection record for every later component. |
 
-## Decisions intentionally left for API review
+## Closed API-review decisions
 
-The component scope and order are settled. P1 and P3 must resolve only these
-implementation-level choices:
-
-1. exact public names for cached writer and reader handles;
-2. exact Clock configuration and sampling error types;
-3. exact Agent work, termination, and boxed-error types;
-4. whether runner timed close is part of the initial public API or follows
-   after basic request-stop and join;
-5. the return shape that preserves Agent ownership after thread-spawn failure
-   and successful join; and
-6. the concrete bounded primitive used for dynamic add and remove slots.
-
-None of these choices may reopen the selected component scope, weaken the
-behavioral reference, introduce shared-memory facilities, or turn a Julia
-example into an acceptance authority.
+P1 and P3 approved the public Clock and Agent contracts now implemented. The
+backoff compatibility domain is non-negative counts no greater than
+`i64::MAX` and park durations no greater than `i64::MAX / 2` nanoseconds;
+larger Rust inputs retain safe saturating or wrapping behavior but do not
+carry a Java-compatibility claim. These decisions do not reopen component
+scope, introduce shared-memory facilities, or make either Julia example
+normative.

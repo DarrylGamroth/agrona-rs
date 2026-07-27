@@ -1,0 +1,276 @@
+schema_version = 1
+specification_baseline = "docs/AGENT_SPEC.md active, Agrona d4a47c67258f85b39910c4999da346ead655b736"
+specification_files = ["docs/AGENT_SPEC.md"]
+
+[[requirements]]
+id = "AGT-CORE-001"
+source = "docs/AGENT_SPEC.md#agt-core-001--agent-contract"
+parent_or_rationale = "DEC-AGENT-001 synchronous single-owner duty-cycle protocol"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["object-safe", "role-name", "lifecycle-defaults", "signed-work", "single-owner"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/agent.rs", "src/agent/agent_result.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_contract.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["object-safe", "role-name", "lifecycle-defaults", "signed-work", "single-owner"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+
+[[requirements]]
+id = "AGT-ERR-001"
+source = "docs/AGENT_SPEC.md#agt-err-001--typed-failure-and-termination"
+parent_or_rationale = "Agrona AgentTerminationException expected/unexpected semantics"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["typed-failure", "expected", "unexpected", "panic-separation"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/agent_error.rs", "src/agent/agent_termination.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_error.rs", "tests/agent_invoker.rs", "tests/agent_runner.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["typed-failure", "expected", "unexpected", "panic-separation"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+
+[[requirements]]
+id = "AGT-ERR-002"
+source = "docs/AGENT_SPEC.md#agt-err-002--error-reporting-and-counting"
+parent_or_rationale = "Agrona AgentRunner and AgentInvoker error matrix"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["ordinary-report", "ordinary-count", "continue", "lifecycle-report", "handler-panic"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/error_handler.rs", "src/agent/agent_error_counter.rs", "src/agent/agent_invoker.rs", "src/agent/agent_runner.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_error.rs", "tests/agent_invoker.rs", "tests/agent_runner.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["ordinary-report", "ordinary-count", "continue", "lifecycle-report", "handler-panic"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+
+[[requirements]]
+id = "AGT-INV-001"
+source = "docs/AGENT_SPEC.md#agt-inv-001--caller-owned-invocation"
+parent_or_rationale = "Agrona AgentInvoker behavior"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["start-once", "ordinary-error", "termination", "close-once", "state"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/agent_invoker.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_invoker.rs", "tests/agent_allocation.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["start-once", "ordinary-error", "termination", "close-once", "state"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+
+[[requirements]]
+id = "AGT-RUN-001"
+source = "docs/AGENT_SPEC.md#agt-run-001--dedicated-thread-lifecycle"
+parent_or_rationale = "Agrona Java runner lifecycle with Aeron C owner-loop comparison"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["thread-name", "start", "work-loop", "idle", "cleanup", "no-hot-lock", "no-hot-allocation"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/agent_runner.rs", "src/agent/agent_runner_handle.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_runner.rs", "tests/agent_allocation.rs", "benches/agents.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["thread-name", "start", "work-loop", "idle", "cleanup", "no-hot-lock", "no-hot-allocation"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+
+[[requirements]]
+id = "AGT-RUN-002"
+source = "docs/AGENT_SPEC.md#agt-run-002--cooperative-stop-and-ownership"
+parent_or_rationale = "Rust adaptation of Java interruption and thread ownership"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["release-acquire-stop", "unpark", "spawn-failure-ownership", "join-agent", "panic-payload", "no-forced-cancel"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/agent_runner.rs", "src/agent/agent_runner_handle.rs", "src/agent/agent_runner_start_error.rs", "src/agent/agent_runner_join_error.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_runner.rs", "tests/agent_liveness.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["release-acquire-stop", "unpark", "spawn-failure-ownership", "join-agent", "panic-payload", "no-forced-cancel"]
+verified_surfaces = ["std-linux", "native-x86_64"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["native AArch64 and cross-platform CI are pending"]
+
+[[requirements]]
+id = "AGT-COMP-001"
+source = "docs/AGENT_SPEC.md#agt-comp-001--static-composite-lifecycle"
+parent_or_rationale = "Agrona CompositeAgent lifecycle behavior"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["reject-empty", "role", "start-all", "close-all", "aggregate-order"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/composite_agent.rs", "src/agent/composite_agent_error.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_composite_agent.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["reject-empty", "role", "start-all", "close-all", "aggregate-order"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+
+[[requirements]]
+id = "AGT-COMP-002"
+source = "docs/AGENT_SPEC.md#agt-comp-002--static-composite-duty-cycle"
+parent_or_rationale = "Agrona CompositeAgent cursor behavior"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["cursor-advance", "failure-resume", "full-reset", "wrapping-sum", "zero-allocation"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/composite_agent.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_composite_agent.rs", "tests/agent_allocation.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["cursor-advance", "failure-resume", "full-reset", "wrapping-sum", "zero-allocation"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+
+[[requirements]]
+id = "AGT-IDLE-001"
+source = "docs/AGENT_SPEC.md#agt-idle-001--idle-strategy-contract"
+parent_or_rationale = "Agrona IdleStrategy contract"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["work-count", "idle-step", "reset", "alias", "single-owner"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/idle_strategy.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_backoff_idle_strategy.rs", "tests/agent_busy_spin_idle_strategy.rs", "tests/agent_no_op_idle_strategy.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["work-count", "idle-step", "reset", "alias", "single-owner"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+
+[[requirements]]
+id = "AGT-IDLE-002"
+source = "docs/AGENT_SPEC.md#agt-idle-002--backoff-strategy"
+parent_or_rationale = "Agrona BackoffIdleStrategy exact state progression"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["defaults", "alias", "first-idle", "spin-boundary", "yield-boundary", "park-doubling", "reset"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/backoff_idle_strategy.rs"]
+evidence_state = "partial"
+evidence_links = ["src/agent/backoff_idle_strategy.rs", "tests/agent_backoff_idle_strategy.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["defaults", "alias", "first-idle", "spin-boundary", "yield-boundary", "park-doubling", "reset"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+
+[[requirements]]
+id = "AGT-IDLE-003"
+source = "docs/AGENT_SPEC.md#agt-idle-003--stateless-strategies"
+parent_or_rationale = "Agrona busy-spin, no-op, and yielding strategies"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["busy-spin", "no-op", "yield", "aliases", "work-counts"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/busy_spin_idle_strategy.rs", "src/agent/no_op_idle_strategy.rs", "src/agent/yielding_idle_strategy.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_busy_spin_idle_strategy.rs", "tests/agent_no_op_idle_strategy.rs", "tests/agent_yielding_idle_strategy.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["busy-spin", "no-op", "yield", "aliases", "work-counts"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+
+[[requirements]]
+id = "AGT-IDLE-004"
+source = "docs/AGENT_SPEC.md#agt-idle-004--sleeping-strategies"
+parent_or_rationale = "Agrona sleeping nanosecond and millisecond strategies"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["ns-default", "ms-default", "aliases", "work-counts"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/sleeping_idle_strategy.rs", "src/agent/sleeping_millis_idle_strategy.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_sleeping_idle_strategy.rs", "tests/agent_sleeping_millis_idle_strategy.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["ns-default", "ms-default", "aliases", "work-counts"]
+verified_surfaces = ["std-linux"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+
+[[requirements]]
+id = "AGT-IDLE-005"
+source = "docs/AGENT_SPEC.md#agt-idle-005--controllable-strategy"
+parent_or_rationale = "Agrona ControllableIdleStrategy process-local adaptation"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["raw-modes", "unknown-park", "release-acquire", "alias", "work-counts"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/controllable_idle_strategy.rs", "src/agent/controllable_idle_strategy_control.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_controllable_idle_strategy.rs", "tests/agent_allocation.rs", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["raw-modes", "unknown-park", "release-acquire", "alias", "work-counts"]
+verified_surfaces = ["std-linux", "native-x86_64"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["native AArch64 and cross-platform CI are pending"]
+
+[[requirements]]
+id = "AGT-PORT-001"
+source = "docs/AGENT_SPEC.md#agt-port-001--supported-implementation-profile"
+parent_or_rationale = "agrona-rs portability and predictable-latency profile"
+owner = "agent"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["rust-1.85", "three-os-ci", "two-architecture-ci", "zero-allocation"]
+implementation_state = "implemented"
+implementation_links = ["src/agent/mod.rs", ".github/workflows/ci.yml", "Cargo.toml"]
+evidence_state = "partial"
+evidence_links = ["tests/agent_allocation.rs", "tests/agent_liveness.rs", ".github/workflows/ci.yml", "docs/AGENT_EVIDENCE.md"]
+verified_obligations = ["rust-1.85", "zero-allocation"]
+verified_surfaces = ["std-linux", "native-x86_64"]
+verified_revision = "working tree based on 975bd9f"
+verified_environment = "Rust 1.85.0 and 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["three-OS and native AArch64 CI are pending"]
+
+[[gates]]
+id = "AGENT-READY"
+requirements = [
+    "AGT-CORE-001",
+    "AGT-ERR-001",
+    "AGT-ERR-002",
+    "AGT-INV-001",
+    "AGT-RUN-001",
+    "AGT-RUN-002",
+    "AGT-COMP-001",
+    "AGT-COMP-002",
+    "AGT-IDLE-001",
+    "AGT-IDLE-002",
+    "AGT-IDLE-003",
+    "AGT-IDLE-004",
+    "AGT-IDLE-005",
+    "AGT-PORT-001",
+]
+state = "partial"
+acceptance_evidence = ["docs/AGENT_EVIDENCE.md"]

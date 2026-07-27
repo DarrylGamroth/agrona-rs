@@ -1,77 +1,85 @@
-# agrona-rs
+agrona-rs
+=========
 
-[![CI](https://github.com/DarrylGamroth/agrona-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/DarrylGamroth/agrona-rs/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/DarrylGamroth/agrona-rs/graph/badge.svg)](https://codecov.io/gh/DarrylGamroth/agrona-rs)
+[![Documentation](https://docs.rs/agrona/badge.svg)](https://docs.rs/agrona)
+[![GitHub](https://img.shields.io/github/license/DarrylGamroth/agrona-rs.svg)](LICENSE)
 
-Project skeleton for an unofficial, idiomatic Rust port of selected
-[Agrona](https://github.com/aeron-io/agrona) low-latency building blocks.
+[![Actions Status](https://github.com/DarrylGamroth/agrona-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/DarrylGamroth/agrona-rs/actions)
+[![Codecov](https://codecov.io/gh/DarrylGamroth/agrona-rs/graph/badge.svg)](https://codecov.io/gh/DarrylGamroth/agrona-rs)
 
-> [!WARNING]
-> The Clock family is implemented. The complete Agent family is selected as
-> the next component but has not been implemented yet.
+agrona-rs provides data structures and utilities commonly needed when
+building high-performance applications in Rust. It is an unofficial,
+idiomatic port of selected components from
+[Agrona](https://github.com/aeron-io/agrona), which is used by the
+[Aeron](https://github.com/aeron-io/aeron) messaging system.
 
-The Clock implementation includes distinct epoch and monotonic provider
-traits, system clocks, single-writer cached clocks, injectable sources, and an
-offset epoch nanosecond clock.
+The port preserves Agrona Java behavior where compatibility is claimed while
+using Rust ownership, traits, typed errors, and explicit thread handles.
+Agrona Java is the normative behavioral reference; Aeron C is an additional
+native implementation reference for Agent ownership, atomics, and idle
+primitives.
 
-## Clocks
+Utilities Include:
 
-```rust
-use agrona::clock::{
-    CachedEpochClock, EpochClock, EpochNanoClock, OffsetEpochNanoClock,
-    SystemEpochClock,
-};
+* Clocks - Epoch and monotonic providers, single-writer cached clocks, and an
+  offset epoch nanosecond clock.
+* Simple Agent framework - Mutable duty cycles with lifecycle callbacks,
+  typed recoverable errors, and expected or unexpected termination.
+* Agent execution - Caller-driven invocation and dedicated named OS threads
+  with cooperative shutdown.
+* Agent composition - Static composition of heterogeneous Agents with exact
+  Agrona cursor and lifecycle behavior.
+* Idle strategies - Backoff, busy-spin, controllable, no-op, nanosecond
+  sleeping, millisecond sleeping, and yielding strategies.
 
-let epoch_ms = SystemEpochClock.time();
+`DynamicCompositeAgent`, shared-memory counters and controls, buffers, queues,
+and the other Agrona utility families are not currently implemented. The
+runner's steady-state loop introduces no mutex, channel operation, or heap
+allocation. Shutdown remains cooperative, so blocking Agent code must provide
+an application-owned wakeup mechanism.
 
-let mut cached = CachedEpochClock::with_initial_time(epoch_ms);
-let reader = cached.reader();
-cached.advance(1);
-assert_eq!(epoch_ms + 1, reader.time());
+For the selected scope and compatibility decisions see the
+[Porting Plan](docs/PORTING_PLAN.md). Normative behavior and verification are
+recorded in the [Agent specification](docs/AGENT_SPEC.md),
+[Agent evidence](docs/AGENT_EVIDENCE.md), and
+[Clock evidence](docs/CLOCK_EVIDENCE.md). Exact upstream revisions are in
+[UPSTREAM.md](UPSTREAM.md).
 
-let offset = OffsetEpochNanoClock::new()?;
-let epoch_ns = offset.nano_time();
-# Ok::<(), agrona::clock::OffsetEpochNanoClockError>(())
-```
+Build
+-----
 
-Cached writers are not cloneable; cloned reader handles observe release
-published updates with acquire ordering. Normal offset-clock reads are
-lock-free and allocation-free.
+### Rust Build
 
-## Planning
+Build the project with [Cargo](https://doc.rust-lang.org/cargo/).
 
-See [the initial delivery plan](docs/PORTING_PLAN.md) for:
+Rust 1.85 is the minimum supported compiler. The project uses Rust 2024
+edition and is tested on stable Rust for Linux x86_64, Linux AArch64, macOS
+AArch64, and Windows x86_64.
 
-- the selected Clock and Agent component families;
-- their Rust ownership and compatibility decisions;
-- dependency-ordered implementation and validation phases;
-- explicitly deferred shared-memory facilities; and
-- the API decisions that must be reviewed before source implementation.
+Full build and test:
 
-The normative Clock contract and current evidence are in
-[`CLOCK_SPEC.md`](docs/CLOCK_SPEC.md) and
-[`CLOCK_EVIDENCE.md`](docs/CLOCK_EVIDENCE.md).
+    $ cargo test --workspace --all-targets --all-features
 
-See the [Rust ecosystem review](docs/ECOSYSTEM_REVIEW.md) for the current
-feature-by-feature adopt, wrap, port-candidate, omit, or defer recommendations.
-Those recommendations compare operational semantics—including steady-state
-allocation and latency bounds—not just similarly named APIs.
+Formatting, lint, documentation, and MSRV checks:
 
-Agrona Java is the normative behavioral reference. Aeron C is an
-implementation reference for native Agent ownership, thread lifecycle, and
-idle primitives. The sibling `Agent.jl`, `Clocks.jl`, and `SnowflakeId.jl`
-packages are independent examples only; they are not acceptance oracles for
-the Rust port.
+    $ cargo fmt --all --check
+    $ cargo clippy --workspace --all-targets --all-features -- -D warnings
+    $ RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
+    $ cargo +1.85.0 check --workspace --all-targets --all-features
 
-## Minimum supported Rust version
-
-The skeleton provisionally uses Rust 1.85 and Rust 2024 edition. The supported
-compiler policy will be confirmed before the first release.
-
-## License
+License (See LICENSE file for full license)
+-------------------------------------------
 
 Copyright 2026 Rubus Technologies Inc.
 
-Licensed under the [Apache License, Version 2.0](LICENSE). Portions are adapted
-from Agrona only when identified in future source files. See [NOTICE](NOTICE)
-and [UPSTREAM.md](UPSTREAM.md) for planned attribution policy.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
