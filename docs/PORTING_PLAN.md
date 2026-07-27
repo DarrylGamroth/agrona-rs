@@ -45,6 +45,11 @@ The sources have distinct roles:
    have no direct Rust equivalent. Every intentional behavioral adaptation
    must be documented and tested.
 
+For every selected operation, the Rust port preserves the Java reference's
+progress class. A Java lock-free path is not implemented with a mutex or lock
+in Rust. Wait-free is claimed only when the reference behavior and the
+complete Rust operation both have a bounded-step justification.
+
 See [`UPSTREAM.md`](../UPSTREAM.md) for revisions and attribution policy.
 
 ## Goals
@@ -82,7 +87,7 @@ See [`UPSTREAM.md`](../UPSTREAM.md) for revisions and attribution policy.
   Rust.
 - Edition and provisional MSRV: Rust 2024 and Rust 1.85.
 - Initial platform profile: `std` on Linux, macOS, and Windows targets with
-  native 64-bit atomics.
+  native 64-bit atomics, exercised on both x86_64 and AArch64.
 - Initial package shape: one `agrona` crate with `clock` and `agent` modules.
   A workspace split requires a demonstrated dependency or release need.
 - Safe Rust is the default. Any `unsafe` block requires a written invariant,
@@ -218,13 +223,20 @@ Offset sampling:
 
 Construction validates a positive retry count and resample interval and a
 non-negative threshold. Construction and explicit resampling are fallible.
-Concurrent sampling is serialized. Normal reads use a coherent versioned
-snapshot and do not take the sampling lock. An automatically triggered
-resample is a documented slow path and may block behind another sampler.
+Following Agrona Java, every sampler independently builds an immutable sample
+and atomically replaces the published snapshot. Concurrent sampling is not
+serialized by a mutex or lock, and the last completed atomic replacement
+becomes current. Normal reads load one coherent immutable snapshot without
+locking.
 
 The design must use checked duration conversion during setup. Hot reads return
 `i64` directly and must not allocate. Platform resolution may be coarser than
 the return unit.
+
+Public Clock components follow Agrona Java's one-component-per-file layout.
+Rust-only companion reader handles remain in the same file as their
+corresponding cached writer, and `clock/mod.rs` is limited to module
+documentation, declarations, platform guards, and re-exports.
 
 #### G5 — Acceptance evidence
 
@@ -537,14 +549,13 @@ Completion evidence:
 Likely files:
 
 - `src/clock/mod.rs`;
-- `src/clock/system.rs`;
-- `src/clock/cached.rs`;
-- `src/clock/offset.rs`; and
+- one Rust source file per public Agrona Clock component;
+- private Clock value and system-time helper files; and
 - `tests/clock_*.rs`.
 
 Before implementation, review the exact trait signatures, cached
-writer/reader handle names, error types, configuration type, versioned sample
-protocol, and public re-exports against DEC-CLOCK-001.
+writer/reader handle names, error types, configuration type, immutable atomic
+sample publication, and public re-exports against DEC-CLOCK-001.
 
 Completion evidence is an approved API sketch mapping every public item to the
 selection record and Agrona source.
@@ -630,7 +641,7 @@ replace them.
 | Java API translation instead of a Rust design | Require P1 and P3 API reviews and document every adaptation. |
 | Examples becoming accidental requirements | Keep Agrona Java normative and label both Julia repositories as examples only. |
 | Aeron C defaults overriding Agrona behavior | Use C for native design comparison only; test Java defaults explicitly. |
-| Offset readers observe an inconsistent sample | Use a coherent versioned publication protocol and concurrency tests. |
+| Offset readers observe an inconsistent sample | Atomically replace an immutable sample as Agrona Java does and verify overlapping publishers and readers. |
 | Cached clocks imply multi-writer safety | Make the writer handle unique and document release/acquire publication. |
 | Rust panics become recoverable Agent errors | Keep panics fatal, attempt cleanup, and propagate through join. |
 | A blocking Agent prevents shutdown | Specify cooperative stop, timed stall reporting, and application wakeup obligations. |

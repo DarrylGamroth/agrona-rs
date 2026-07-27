@@ -15,6 +15,9 @@ license = "Apache-2.0"
 keywords = ["agrona", "low-latency", "concurrency", "ring-buffer"]
 categories = ["concurrency", "data-structures"]
 
+[dependencies]
+arc-swap = "1.9.2"
+
 [package.metadata.docs.rs]
 all-features = true
 
