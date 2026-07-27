@@ -8,15 +8,16 @@
   `d4a47c67258f85b39910c4999da346ead655b736`.
 - Aeron C native comparison:
   `e44cd27a3b357c27ad37f6107a957f46d95552ac`.
-- Verified implementation: current working tree based on `975bd9f`; a
-  committed revision and GitHub Actions run are pending.
+- Verified implementation:
+  `3b59551cfa6598c3c3fbcdf0d90d90f31891ef62`.
+- GitHub Actions:
+  [run 30312017451](https://github.com/DarrylGamroth/agrona-rs/actions/runs/30312017451).
 - Local environment: Debian Linux 6.12.57, x86_64,
   `rustc 1.93.0 (254b59607 2026-01-19)`.
 - MSRV check: Rust 1.85.0.
 
-This document records local x86_64 acceptance. The `AGENT-READY` gate remains
-partial until the same revision passes native Linux AArch64, macOS AArch64,
-Windows x86_64, coverage upload, and the other configured GitHub jobs.
+This document combines local x86_64 acceptance with native GitHub-hosted
+x86_64 and AArch64 evidence for Linux, macOS, and Windows.
 
 ## Requirement coverage
 
@@ -35,7 +36,7 @@ Windows x86_64, coverage upload, and the other configured GitHub jobs.
 | `AGT-IDLE-003` | Busy-spin, no-op, and yielding aliases and positive/zero/negative work counts pass. |
 | `AGT-IDLE-004` | Nanosecond park and millisecond sleep defaults, aliases, and work counts pass. |
 | `AGT-IDLE-005` | Raw and typed controllable modes use release stores and acquire loads; aliases and work-count behavior pass. |
-| `AGT-PORT-001` | Rust 1.85 check, local Linux x86_64 suite, native-atomic compile guard, allocation test, and benchmark pass; cross-platform CI is pending. |
+| `AGT-PORT-001` | Rust 1.85, native Linux/macOS/Windows, native x86_64/AArch64, native-atomic compile guard, allocation test, and benchmark checks pass. |
 
 ## Concurrency and progress audit
 
@@ -70,10 +71,9 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
 cargo +1.85.0 check --workspace --all-targets --all-features
 cargo llvm-cov --workspace --all-features --summary-only
-python3 /home/dgamroth/.codex/skills/local/spec-driven-implementation/scripts/check_traceability.py --ledger docs/agent_traceability.toml --root . --strict
 ```
 
-The complete crate reports 94.56% line coverage locally. Agent tests are kept
+The complete crate reports 94.66% line coverage locally. Agent tests are kept
 in separate component files, with private unit tests used only for exact
 backoff state inspection.
 
@@ -90,14 +90,24 @@ shared local x86_64 host:
 | `BusySpinIdleStrategy::idle` | 15.120 ns/op |
 | `AgentRunner::do_work` | 0.352 ns/op |
 
-The runner figure amortizes thread creation and join over the full run. These
-numbers are compiler-optimization regression evidence, not latency promises:
-the host was not isolated, no CPU affinity was set, and no dedicated-core or
-power-policy claim is made.
+The table reports amortized closed-loop throughput cost rather than an
+operation-latency distribution. The runner figure also amortizes thread
+creation and join over the full run. These numbers are compiler-optimization
+regression evidence, not latency promises: the host was not isolated, no CPU
+affinity was set, and no dedicated-core or power-policy claim is made.
 
-## Remaining gate work
+## GitHub CI results
 
-Push a committed revision and record the GitHub Actions run that passes stable
-Rust on Linux x86_64, Linux AArch64, macOS AArch64, and Windows x86_64, the
-Rust 1.85 job, Codecov upload, formatting, Clippy, and rustdoc. Only then may
-the `AGENT-READY` evidence gate be marked validated.
+GitHub Actions run `30312017451` passed at verified revision `3b59551`:
+
+| Job | Result |
+|---|---|
+| Format, lint, and document | Passed |
+| Test stable on Linux x86_64 | Passed |
+| Test stable on Linux AArch64 | Passed |
+| Test stable on macOS AArch64 | Passed |
+| Test stable on Windows x86_64 | Passed |
+| Check Rust 1.85 MSRV | Passed |
+| Measure and upload coverage to Codecov | Passed |
+
+The `AGENT-READY` evidence gate is closed.

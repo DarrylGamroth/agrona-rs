@@ -12,13 +12,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["object-safe", "role-name", "lifecycle-defaults", "signed-work", "single-owner"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/agent.rs", "src/agent/agent_result.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_contract.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["object-safe", "role-name", "lifecycle-defaults", "signed-work", "single-owner"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-ERR-001"
@@ -30,13 +30,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["typed-failure", "expected", "unexpected", "panic-separation"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/agent_error.rs", "src/agent/agent_termination.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_error.rs", "tests/agent_invoker.rs", "tests/agent_runner.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["typed-failure", "expected", "unexpected", "panic-separation"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-ERR-002"
@@ -48,13 +48,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["ordinary-report", "ordinary-count", "continue", "lifecycle-report", "handler-panic"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/error_handler.rs", "src/agent/agent_error_counter.rs", "src/agent/agent_invoker.rs", "src/agent/agent_runner.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_error.rs", "tests/agent_invoker.rs", "tests/agent_runner.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["ordinary-report", "ordinary-count", "continue", "lifecycle-report", "handler-panic"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-INV-001"
@@ -66,13 +66,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["start-once", "ordinary-error", "termination", "close-once", "state"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/agent_invoker.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_invoker.rs", "tests/agent_allocation.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["start-once", "ordinary-error", "termination", "close-once", "state"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-RUN-001"
@@ -84,13 +84,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["thread-name", "start", "work-loop", "idle", "cleanup", "no-hot-lock", "no-hot-allocation"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/agent_runner.rs", "src/agent/agent_runner_handle.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_runner.rs", "tests/agent_allocation.rs", "benches/agents.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["thread-name", "start", "work-loop", "idle", "cleanup", "no-hot-lock", "no-hot-allocation"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-RUN-002"
@@ -102,13 +102,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "n
 closure_obligations = ["release-acquire-stop", "unpark", "spawn-failure-ownership", "join-agent", "panic-payload", "no-forced-cancel"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/agent_runner.rs", "src/agent/agent_runner_handle.rs", "src/agent/agent_runner_start_error.rs", "src/agent/agent_runner_join_error.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_runner.rs", "tests/agent_liveness.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["release-acquire-stop", "unpark", "spawn-failure-ownership", "join-agent", "panic-payload", "no-forced-cancel"]
-verified_surfaces = ["std-linux", "native-x86_64"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["native AArch64 and cross-platform CI are pending"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-COMP-001"
@@ -120,13 +120,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["reject-empty", "role", "start-all", "close-all", "aggregate-order"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/composite_agent.rs", "src/agent/composite_agent_error.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_composite_agent.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["reject-empty", "role", "start-all", "close-all", "aggregate-order"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-COMP-002"
@@ -138,13 +138,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["cursor-advance", "failure-resume", "full-reset", "wrapping-sum", "zero-allocation"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/composite_agent.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_composite_agent.rs", "tests/agent_allocation.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["cursor-advance", "failure-resume", "full-reset", "wrapping-sum", "zero-allocation"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-IDLE-001"
@@ -156,13 +156,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["work-count", "idle-step", "reset", "alias", "single-owner"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/idle_strategy.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_backoff_idle_strategy.rs", "tests/agent_busy_spin_idle_strategy.rs", "tests/agent_no_op_idle_strategy.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["work-count", "idle-step", "reset", "alias", "single-owner"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-IDLE-002"
@@ -174,13 +174,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["defaults", "alias", "first-idle", "spin-boundary", "yield-boundary", "park-doubling", "reset"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/backoff_idle_strategy.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["src/agent/backoff_idle_strategy.rs", "tests/agent_backoff_idle_strategy.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["defaults", "alias", "first-idle", "spin-boundary", "yield-boundary", "park-doubling", "reset"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-IDLE-003"
@@ -192,13 +192,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["busy-spin", "no-op", "yield", "aliases", "work-counts"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/busy_spin_idle_strategy.rs", "src/agent/no_op_idle_strategy.rs", "src/agent/yielding_idle_strategy.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_busy_spin_idle_strategy.rs", "tests/agent_no_op_idle_strategy.rs", "tests/agent_yielding_idle_strategy.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["busy-spin", "no-op", "yield", "aliases", "work-counts"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-IDLE-004"
@@ -210,13 +210,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["ns-default", "ms-default", "aliases", "work-counts"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/sleeping_idle_strategy.rs", "src/agent/sleeping_millis_idle_strategy.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_sleeping_idle_strategy.rs", "tests/agent_sleeping_millis_idle_strategy.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["ns-default", "ms-default", "aliases", "work-counts"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["current revision has not run in GitHub cross-platform CI"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-IDLE-005"
@@ -228,13 +228,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "n
 closure_obligations = ["raw-modes", "unknown-park", "release-acquire", "alias", "work-counts"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/controllable_idle_strategy.rs", "src/agent/controllable_idle_strategy_control.rs"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_controllable_idle_strategy.rs", "tests/agent_allocation.rs", "docs/AGENT_EVIDENCE.md"]
 verified_obligations = ["raw-modes", "unknown-park", "release-acquire", "alias", "work-counts"]
-verified_surfaces = ["std-linux", "native-x86_64"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["native AArch64 and cross-platform CI are pending"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-PORT-001"
@@ -246,13 +246,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "n
 closure_obligations = ["rust-1.85", "three-os-ci", "two-architecture-ci", "zero-allocation"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/mod.rs", ".github/workflows/ci.yml", "Cargo.toml"]
-evidence_state = "partial"
+evidence_state = "validated"
 evidence_links = ["tests/agent_allocation.rs", "tests/agent_liveness.rs", ".github/workflows/ci.yml", "docs/AGENT_EVIDENCE.md"]
-verified_obligations = ["rust-1.85", "zero-allocation"]
-verified_surfaces = ["std-linux", "native-x86_64"]
-verified_revision = "working tree based on 975bd9f"
-verified_environment = "Rust 1.85.0 and 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["three-OS and native AArch64 CI are pending"]
+verified_obligations = ["rust-1.85", "three-os-ci", "two-architecture-ci", "zero-allocation"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+verified_revision = "3b59551cfa6598c3c3fbcdf0d90d90f31891ef62"
+verified_environment = "GitHub Actions run 30312017451; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[gates]]
 id = "AGENT-READY"
@@ -272,5 +272,5 @@ requirements = [
     "AGT-IDLE-005",
     "AGT-PORT-001",
 ]
-state = "partial"
+state = "complete"
 acceptance_evidence = ["docs/AGENT_EVIDENCE.md"]
