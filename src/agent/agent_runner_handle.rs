@@ -11,6 +11,11 @@ use super::AgentRunnerJoinError;
 use super::agent_runner::RunnerOutcome;
 
 /// Control and join handle for a running Agent.
+///
+/// Dropping a live handle follows [`JoinHandle`] semantics: the worker
+/// detaches, no stop is requested, and deterministic cleanup is lost. Call
+/// [`Self::close`] or [`Self::close_with_retry`] when cleanup is required.
+#[must_use = "dropping a live AgentRunnerHandle detaches the worker without requesting stop"]
 pub struct AgentRunnerHandle<A> {
     pub(crate) running: Arc<AtomicBool>,
     pub(crate) closed: Arc<AtomicBool>,

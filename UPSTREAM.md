@@ -64,7 +64,9 @@ behavior.
   handles over Java-shaped APIs.
 - Record and test intentional Rust adaptations where Java mechanics have no
   direct safe equivalent.
-- Retain the original copyright notice in substantially derived source files and
-  mark them as modified for Rust.
+- Retain the original copyright notice in substantially derived source files
+  and add the applicable Rubus Technologies Inc. copyright and SPDX headers.
+  Repository-level adaptation notices are maintained in `NOTICE` and this
+  document.
 - Record the upstream source and revision when a component becomes implemented.
 - Require differential tests before claiming Java/Rust binary compatibility.
