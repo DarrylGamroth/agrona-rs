@@ -7,8 +7,8 @@
 //! Unofficial, idiomatic Rust port of selected
 //! [Agrona](https://github.com/aeron-io/agrona) components.
 //!
-//! The Clock family is implemented. The complete Agent family is selected as
-//! the next delivery increment. Their design and acceptance gates are
-//! recorded in the repository's porting plan.
+//! The Clock family and selected Agent family are implemented against the
+//! repository's normative specifications.
 
+pub mod agent;
 pub mod clock;

@@ -28,3 +28,7 @@ unsafe_op_in_unsafe_fn = "deny"
 [[bench]]
 name = "clocks"
 harness = false
+
+[[bench]]
+name = "agents"
+harness = false

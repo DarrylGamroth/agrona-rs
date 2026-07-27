@@ -6,9 +6,10 @@ This is the recorded G2 ecosystem input for the
 [initial delivery plan](PORTING_PLAN.md). It was reviewed on 2026-07-27 against
 Agrona commit `d4a47c67258f85b39910c4999da346ead655b736`.
 
-The delivery plan, rather than this review, selects Clocks and the complete
-Agent family. Versions are a review snapshot and must be checked again before
-adding a dependency.
+The delivery plan, rather than this review, selects Clocks and the Agent
+protocol, runner, invoker, static composite, and idle strategies. Dynamic
+composition is not selected. Versions are a review snapshot and must be
+checked again before adding a dependency.
 
 ## Why Agrona's zero-GC design still matters
 
@@ -91,10 +92,11 @@ review, focused tests, and representative benchmarks.
 
 No reviewed crate is a drop-in equivalent to Agrona's deliberately small
 duty-cycle protocol. The initial delivery therefore includes the Agent
-protocol, runner, invoker, static and dynamic composites, lifecycle and error
-behavior, and all Agrona idle strategies. Actual CPU affinity remains an
-explicit optional facility rather than a claim made from thread placement
-alone.
+protocol, runner, invoker, static composite, lifecycle and error behavior, and
+all Agrona idle strategies. `DynamicCompositeAgent` is omitted because the
+initial use case does not require cross-thread reconfiguration. Actual CPU
+affinity remains an explicit optional facility rather than a claim made from
+thread placement alone.
 
 ### Clocks are selected from the Agrona Java contract
 
