@@ -47,6 +47,8 @@ behavior.
 ## Porting policy
 
 - Preserve externally visible Agrona behavior when compatibility is claimed.
+- Preserve the progress class of each selected operation; never replace a
+  Java lock-free path with a Rust mutex or lock.
 - Prefer Rust ownership, lifetimes, traits, `Result`, and split producer/consumer
   handles over Java-shaped APIs.
 - Record and test intentional Rust adaptations where Java mechanics have no

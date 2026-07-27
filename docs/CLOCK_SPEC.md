@@ -111,13 +111,20 @@ conversion, and no-valid-window behavior.
 
 ### CLK-OFFSET-003 — Coherent offset reads and resampling
 
-Offset clock reads MUST observe one coherent published sample without taking
-the sampling mutex on the normal read path, derive epoch nanoseconds with
-wrapping `i64` arithmetic, and serialize resampling after interval expiry or
-backward monotonic movement.
+Following Agrona Java's volatile publication of an immutable `TimeFields`
+object, each completed sampling operation MUST atomically replace one
+immutable sample snapshot, while each offset clock read loads exactly one
+coherent snapshot through a wait-free snapshot-load operation without locking,
+derives epoch nanoseconds with wrapping `i64` arithmetic, and triggers
+resampling after interval expiry or backward monotonic movement.
+
+The wait-free statement applies only to loading an already-published immutable
+snapshot. It does not classify injected time-source calls, the automatic
+resampling branch, replacement-snapshot allocation, or the complete
+`nano_time` operation as wait-free.
 
 Verification intent (informative): publication stress, interval, backward
-movement, explicit concurrent sampling, and source inspection.
+movement, and source inspection of ordering on x86_64 and AArch64.
 
 ### CLK-OFFSET-004 — Automatic resampling failure
 
@@ -128,6 +135,15 @@ derived from that sample, while explicit `sample` reports
 
 Verification intent (informative): a scripted source forces every automatic
 sample window backward and verifies retained-sample behavior.
+
+### CLK-OFFSET-005 — Non-serialized sampling
+
+Explicit and automatic sampling operations MUST NOT be serialized by a mutex
+or lock; concurrent completed samples independently replace the current
+immutable snapshot, with the last atomic replacement becoming current.
+
+Verification intent (informative): overlapping explicit sampling, concurrent
+readers and samplers, panic recovery without poisoning, and source inspection.
 
 ### CLK-ALLOC-001 — Steady-state allocation
 
@@ -146,6 +162,14 @@ behavioral test suite enabled on Linux, macOS, and Windows.
 
 Verification intent (informative): source inspection plus stable, MSRV, and
 three-OS CI.
+
+### CLK-PORT-002 — Native architecture validation
+
+CI MUST execute the Clock concurrency suite natively on both x86_64 and
+AArch64.
+
+Verification intent (informative): maintained x86_64 and AArch64 GitHub-hosted
+runner results for the delivered revision.
 
 ## Claim limits
 

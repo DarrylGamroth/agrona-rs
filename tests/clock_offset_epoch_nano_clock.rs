@@ -1,17 +1,16 @@
 // Copyright 2026 Rubus Technologies Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-//! Behavioral and concurrency acceptance tests for `DEC-CLOCK-001`.
+//! Behavioral and concurrency tests for `OffsetEpochNanoClock`.
 
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicUsize, Ordering};
-use std::sync::{Arc, Barrier};
 use std::thread;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant};
 
 use agrona::clock::{
-    CachedEpochClock, CachedNanoClock, EpochClock, EpochMicroClock, EpochNanoClock, NanoClock,
-    OffsetEpochNanoClock, OffsetEpochNanoClockConfig, OffsetEpochNanoClockError, SystemEpochClock,
-    SystemEpochMicroClock, SystemEpochNanoClock, SystemNanoClock,
+    EpochClock, EpochNanoClock, NanoClock, OffsetEpochNanoClock, OffsetEpochNanoClockConfig,
+    OffsetEpochNanoClockError, SystemEpochClock,
 };
 
 #[derive(Debug)]
@@ -58,11 +57,7 @@ impl NanoClock for ScriptedNanoClock {
     }
 }
 
-fn offset_config(
-    retries: usize,
-    threshold_ns: u64,
-    interval_ns: u64,
-) -> OffsetEpochNanoClockConfig {
+fn config(retries: usize, threshold_ns: u64, interval_ns: u64) -> OffsetEpochNanoClockConfig {
     OffsetEpochNanoClockConfig::new(
         retries,
         Duration::from_nanos(threshold_ns),
@@ -72,111 +67,11 @@ fn offset_config(
 }
 
 #[test]
-fn provider_traits_are_object_safe_and_domains_are_distinct() {
-    let epoch: Box<dyn EpochClock> = Box::new(SystemEpochClock);
-    let epoch_micro: Box<dyn EpochMicroClock> = Box::new(SystemEpochMicroClock);
-    let epoch_nano: Box<dyn EpochNanoClock> = Box::new(SystemEpochNanoClock);
-    let monotonic: Box<dyn NanoClock> = Box::new(SystemNanoClock);
-
-    assert!(epoch.time() > 0);
-    assert!(epoch_micro.micro_time() > 0);
-    assert!(epoch_nano.nano_time() > 0);
-    assert!(monotonic.nano_time() >= 0);
-}
-
-#[test]
-fn system_epoch_clocks_track_system_time() {
-    let before = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("current time should follow the Unix epoch");
-
-    let millis = SystemEpochClock.time();
-    let micros = SystemEpochMicroClock.micro_time();
-    let nanos = SystemEpochNanoClock.nano_time();
-
-    let after = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("current time should follow the Unix epoch");
-    let tolerance = Duration::from_secs(1);
-
-    assert!(millis >= before.saturating_sub(tolerance).as_millis() as i64);
-    assert!(millis <= after.saturating_add(tolerance).as_millis() as i64);
-    assert!(micros >= before.saturating_sub(tolerance).as_micros() as i64);
-    assert!(micros <= after.saturating_add(tolerance).as_micros() as i64);
-    assert!(nanos >= before.saturating_sub(tolerance).as_nanos() as i64);
-    assert!(nanos <= after.saturating_add(tolerance).as_nanos() as i64);
-}
-
-#[test]
-fn system_nano_clock_is_nondecreasing_and_measures_elapsed_time() {
-    let clock = SystemNanoClock;
-    let samples: Vec<_> = (0..1_000).map(|_| clock.nano_time()).collect();
-    assert!(samples.windows(2).all(|pair| pair[0] <= pair[1]));
-
-    let before = clock.nano_time();
-    thread::sleep(Duration::from_millis(2));
-    assert!(clock.nano_time() > before);
-}
-
-#[test]
-fn cached_clocks_update_advance_and_wrap() {
-    let mut epoch = CachedEpochClock::new();
-    let epoch_reader = epoch.reader();
-    let mut nano = CachedNanoClock::with_initial_time(i64::MAX);
-    let nano_reader = nano.reader();
-
-    assert_eq!(0, epoch.time());
-    assert_eq!(0, epoch_reader.time());
-    epoch.update(333);
-    assert_eq!(333, epoch_reader.time());
-    assert_eq!(340, epoch.advance(7));
-    assert_eq!(340, epoch_reader.time());
-
-    assert_eq!(i64::MAX, nano.nano_time());
-    assert_eq!(i64::MIN, nano.advance(1));
-    assert_eq!(i64::MIN, nano_reader.nano_time());
-    nano.update(777);
-    assert_eq!(777, nano_reader.nano_time());
-}
-
-#[test]
-fn cached_clock_publishes_to_multiple_readers() {
-    let mut writer = CachedNanoClock::new();
-    let final_reader = writer.reader();
-    let barrier = Arc::new(Barrier::new(4));
-    let mut readers = Vec::new();
-
-    for _ in 0..3 {
-        let reader = writer.reader();
-        let barrier = Arc::clone(&barrier);
-        readers.push(thread::spawn(move || {
-            barrier.wait();
-            let mut previous = i64::MIN;
-            for _ in 0..100_000 {
-                let current = reader.nano_time();
-                assert!(current >= previous);
-                previous = current;
-            }
-        }));
-    }
-
-    barrier.wait();
-    for value in 1..=100_000 {
-        writer.update(value);
-    }
-
-    for reader in readers {
-        reader.join().expect("reader should not panic");
-    }
-    assert_eq!(100_000, final_reader.nano_time());
-}
-
-#[test]
-fn offset_clock_accepts_first_sample_within_threshold() {
+fn accepts_first_sample_within_threshold() {
     let clock = OffsetEpochNanoClock::with_sources(
         ScriptedEpochClock::new([1_000]),
         ScriptedNanoClock::new([100, 104, 112]),
-        offset_config(3, 5, 1_000),
+        config(3, 5, 1_000),
     )
     .expect("sample should succeed");
 
@@ -185,11 +80,11 @@ fn offset_clock_accepts_first_sample_within_threshold() {
 }
 
 #[test]
-fn offset_clock_uses_narrowest_fallback_sample() {
+fn uses_narrowest_fallback_sample() {
     let clock = OffsetEpochNanoClock::with_sources(
         ScriptedEpochClock::new([1_000, 2_000, 3_000]),
         ScriptedNanoClock::new([100, 120, 200, 208, 300, 306, 310]),
-        offset_config(3, 5, 1_000),
+        config(3, 5, 1_000),
     )
     .expect("fallback sample should succeed");
 
@@ -198,11 +93,11 @@ fn offset_clock_uses_narrowest_fallback_sample() {
 }
 
 #[test]
-fn offset_clock_saturates_epoch_conversion_then_wraps_output() {
+fn saturates_epoch_conversion_then_wraps_output() {
     let clock = OffsetEpochNanoClock::with_sources(
         ScriptedEpochClock::new([i64::MAX]),
         ScriptedNanoClock::new([0, 0, 1]),
-        offset_config(1, 1, 1_000),
+        config(1, 1, 1_000),
     )
     .expect("sample should succeed");
 
@@ -210,11 +105,11 @@ fn offset_clock_saturates_epoch_conversion_then_wraps_output() {
 }
 
 #[test]
-fn offset_clock_threshold_comparison_is_strict() {
+fn threshold_comparison_is_strict() {
     let clock = OffsetEpochNanoClock::with_sources(
         ScriptedEpochClock::new([1_000]),
         ScriptedNanoClock::new([100, 105]),
-        offset_config(1, 5, 1_000),
+        config(1, 5, 1_000),
     )
     .expect("fallback sample should succeed");
 
@@ -222,7 +117,7 @@ fn offset_clock_threshold_comparison_is_strict() {
 }
 
 #[test]
-fn offset_clock_rejects_invalid_configuration() {
+fn rejects_invalid_configuration() {
     assert_eq!(
         Err(OffsetEpochNanoClockError::ZeroMeasurementRetries),
         OffsetEpochNanoClockConfig::new(0, Duration::ZERO, Duration::from_nanos(1))
@@ -244,7 +139,7 @@ fn offset_clock_rejects_invalid_configuration() {
 }
 
 #[test]
-fn offset_clock_defaults_match_agrona() {
+fn defaults_match_agrona() {
     let config = OffsetEpochNanoClockConfig::default();
 
     assert_eq!(100, config.max_measurement_retries());
@@ -253,11 +148,11 @@ fn offset_clock_defaults_match_agrona() {
 }
 
 #[test]
-fn offset_clock_reports_when_every_window_is_invalid() {
+fn reports_when_every_window_is_invalid() {
     let error = OffsetEpochNanoClock::with_sources(
         ScriptedEpochClock::new([1, 2]),
         ScriptedNanoClock::new([2, 1, 4, 3]),
-        offset_config(2, 250, 1_000),
+        config(2, 250, 1_000),
     )
     .expect_err("all backward windows should fail");
 
@@ -265,11 +160,11 @@ fn offset_clock_reports_when_every_window_is_invalid() {
 }
 
 #[test]
-fn offset_clock_resamples_after_interval_and_backward_movement() {
+fn resamples_after_interval_and_backward_movement() {
     let expired = OffsetEpochNanoClock::with_sources(
         ScriptedEpochClock::new([1_000, 2_000]),
         ScriptedNanoClock::new([0, 0, 11, 12, 12, 13]),
-        offset_config(1, 1, 10),
+        config(1, 1, 10),
     )
     .expect("initial sample should succeed");
     assert_eq!(2_000_000_001, expired.nano_time());
@@ -277,7 +172,7 @@ fn offset_clock_resamples_after_interval_and_backward_movement() {
     let backward = OffsetEpochNanoClock::with_sources(
         ScriptedEpochClock::new([1_000, 2_000]),
         ScriptedNanoClock::new([100, 100, 99, 90, 90, 91]),
-        offset_config(1, 1, 10),
+        config(1, 1, 10),
     )
     .expect("initial sample should succeed");
     assert_eq!(2_000_000_001, backward.nano_time());
@@ -288,7 +183,7 @@ fn automatic_resample_failure_retains_last_sample() {
     let clock = OffsetEpochNanoClock::with_sources(
         ScriptedEpochClock::new([1_000, 2_000, 3_000]),
         ScriptedNanoClock::new([100, 100, 99, 10, 9, 20, 19, 98]),
-        offset_config(2, 1, 10),
+        config(2, 1, 10),
     )
     .expect("initial sample should succeed");
 
@@ -297,7 +192,7 @@ fn automatic_resample_failure_retains_last_sample() {
 }
 
 #[test]
-fn offset_system_clock_tracks_epoch_time() {
+fn system_sources_track_epoch_time() {
     let before = SystemEpochClock.time();
     let clock = OffsetEpochNanoClock::new().expect("system sample should work");
     let value_ms = clock.nano_time() / 1_000_000;
@@ -326,12 +221,12 @@ impl NanoClock for AtomicNanoClock {
 }
 
 #[test]
-fn offset_clock_supports_concurrent_reads_and_sampling() {
+fn supports_concurrent_reads_and_sampling() {
     let clock = Arc::new(
         OffsetEpochNanoClock::with_sources(
             ConstantEpochClock(1_000),
             AtomicNanoClock(AtomicI64::new(0)),
-            offset_config(1, 2, 1_000_000),
+            config(1, 2, 1_000_000),
         )
         .expect("initial sample should succeed"),
     );
@@ -362,6 +257,143 @@ fn offset_clock_supports_concurrent_reads_and_sampling() {
 }
 
 #[derive(Debug)]
+struct OverlappingEpochClock {
+    calls: AtomicUsize,
+    concurrent_calls: AtomicUsize,
+}
+
+impl EpochClock for OverlappingEpochClock {
+    fn time(&self) -> i64 {
+        let call = self.calls.fetch_add(1, Ordering::Relaxed);
+        if call != 0 {
+            self.concurrent_calls.fetch_add(1, Ordering::AcqRel);
+            let deadline = Instant::now() + Duration::from_secs(2);
+            while self.concurrent_calls.load(Ordering::Acquire) != 2 {
+                assert!(
+                    Instant::now() < deadline,
+                    "sampling calls were serialized instead of overlapping"
+                );
+                thread::yield_now();
+            }
+        }
+
+        1_000
+    }
+}
+
+#[test]
+fn explicit_sampling_operations_overlap_without_serialization() {
+    let clock = Arc::new(
+        OffsetEpochNanoClock::with_sources(
+            OverlappingEpochClock {
+                calls: AtomicUsize::new(0),
+                concurrent_calls: AtomicUsize::new(0),
+            },
+            AtomicNanoClock(AtomicI64::new(0)),
+            config(1, 10, 1_000_000),
+        )
+        .expect("initial sample should succeed"),
+    );
+
+    let first = {
+        let clock = Arc::clone(&clock);
+        thread::spawn(move || clock.sample())
+    };
+    let second = {
+        let clock = Arc::clone(&clock);
+        thread::spawn(move || clock.sample())
+    };
+
+    first
+        .join()
+        .expect("first sampler should not panic")
+        .expect("first sample should succeed");
+    second
+        .join()
+        .expect("second sampler should not panic")
+        .expect("second sample should succeed");
+}
+
+#[derive(Debug)]
+struct OrderedPublicationNanoClock {
+    calls: AtomicUsize,
+    first_sampler_waiting: Arc<AtomicBool>,
+    release_first_sampler: Arc<AtomicBool>,
+}
+
+impl NanoClock for OrderedPublicationNanoClock {
+    fn nano_time(&self) -> i64 {
+        match self.calls.fetch_add(1, Ordering::Relaxed) {
+            0 | 1 => 0,
+            2 => 100,
+            3 => {
+                self.first_sampler_waiting.store(true, Ordering::Release);
+                let deadline = Instant::now() + Duration::from_secs(2);
+                while !self.release_first_sampler.load(Ordering::Acquire) {
+                    assert!(
+                        Instant::now() < deadline,
+                        "second sampler did not complete in time"
+                    );
+                    thread::yield_now();
+                }
+                100
+            }
+            4 | 5 => 200,
+            _ => 101,
+        }
+    }
+}
+
+#[test]
+fn last_completed_atomic_replacement_becomes_current() {
+    let first_sampler_waiting = Arc::new(AtomicBool::new(false));
+    let release_first_sampler = Arc::new(AtomicBool::new(false));
+    let clock = Arc::new(
+        OffsetEpochNanoClock::with_sources(
+            ScriptedEpochClock::new([1_000, 2_000, 3_000]),
+            OrderedPublicationNanoClock {
+                calls: AtomicUsize::new(0),
+                first_sampler_waiting: Arc::clone(&first_sampler_waiting),
+                release_first_sampler: Arc::clone(&release_first_sampler),
+            },
+            config(1, 1, 1_000_000),
+        )
+        .expect("initial sample should succeed"),
+    );
+
+    let first = {
+        let clock = Arc::clone(&clock);
+        thread::spawn(move || clock.sample())
+    };
+
+    let deadline = Instant::now() + Duration::from_secs(2);
+    while !first_sampler_waiting.load(Ordering::Acquire) {
+        assert!(
+            Instant::now() < deadline,
+            "first sampler did not reach its publication boundary"
+        );
+        thread::yield_now();
+    }
+
+    let second = {
+        let clock = Arc::clone(&clock);
+        thread::spawn(move || clock.sample())
+    };
+    second
+        .join()
+        .expect("second sampler should not panic")
+        .expect("second sample should succeed");
+
+    release_first_sampler.store(true, Ordering::Release);
+    first
+        .join()
+        .expect("first sampler should not panic")
+        .expect("first sample should succeed");
+
+    assert_eq!(2_000_000_001, clock.nano_time());
+}
+
+#[derive(Debug)]
 struct PanicSwitchNanoClock {
     value: AtomicI64,
     should_panic: Arc<AtomicBool>,
@@ -378,7 +410,7 @@ impl NanoClock for PanicSwitchNanoClock {
 }
 
 #[test]
-fn explicit_sample_reports_a_poisoned_sampling_lock() {
+fn a_panicking_sampler_does_not_poison_future_sampling() {
     let should_panic = Arc::new(AtomicBool::new(false));
     let clock = OffsetEpochNanoClock::with_sources(
         ScriptedEpochClock::new([1_000, 2_000]),
@@ -386,7 +418,7 @@ fn explicit_sample_reports_a_poisoned_sampling_lock() {
             value: AtomicI64::new(0),
             should_panic: Arc::clone(&should_panic),
         },
-        offset_config(1, 2, 1_000),
+        config(1, 2, 1_000),
     )
     .expect("initial sample should succeed");
 
@@ -397,8 +429,7 @@ fn explicit_sample_reports_a_poisoned_sampling_lock() {
     assert!(panic_result.is_err());
 
     should_panic.store(false, Ordering::Release);
-    assert_eq!(
-        Err(OffsetEpochNanoClockError::SamplingLockPoisoned),
-        clock.sample()
-    );
+    clock
+        .sample()
+        .expect("sampling should recover without a poisoned lock");
 }
