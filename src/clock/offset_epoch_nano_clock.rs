@@ -6,10 +6,10 @@
 
 use std::error::Error;
 use std::fmt;
-use std::hint::spin_loop;
-use std::sync::Mutex;
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU64, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
+
+use arc_swap::ArcSwap;
 
 use super::{EpochClock, EpochNanoClock, NanoClock, SystemEpochClock, SystemNanoClock};
 
@@ -93,8 +93,6 @@ pub enum OffsetEpochNanoClockError {
     /// Every measurement window was invalid because monotonic time moved
     /// backward or overflowed.
     NoValidSample,
-    /// A source panicked while the sampling mutex was held.
-    SamplingLockPoisoned,
 }
 
 impl fmt::Display for OffsetEpochNanoClockError {
@@ -108,7 +106,6 @@ impl fmt::Display for OffsetEpochNanoClockError {
                 "resample interval must fit in positive i64 nanoseconds"
             }
             Self::NoValidSample => "monotonic clock moved backward during every sampling attempt",
-            Self::SamplingLockPoisoned => "sampling lock is poisoned",
         })
     }
 }
@@ -122,74 +119,18 @@ struct Sample {
     within_threshold: bool,
 }
 
-#[derive(Debug)]
-struct PublishedSample {
-    version: AtomicU64,
-    initial_epoch_ns: AtomicI64,
-    initial_nano_time: AtomicI64,
-    within_threshold: AtomicBool,
-}
-
-impl PublishedSample {
-    fn empty() -> Self {
-        Self {
-            version: AtomicU64::new(0),
-            initial_epoch_ns: AtomicI64::new(0),
-            initial_nano_time: AtomicI64::new(0),
-            within_threshold: AtomicBool::new(false),
-        }
-    }
-
-    fn publish(&self, sample: Sample) {
-        let previous = self.version.fetch_add(1, Ordering::AcqRel);
-        debug_assert_eq!(0, previous & 1);
-
-        self.initial_epoch_ns
-            .store(sample.initial_epoch_ns, Ordering::Relaxed);
-        self.initial_nano_time
-            .store(sample.initial_nano_time, Ordering::Relaxed);
-        self.within_threshold
-            .store(sample.within_threshold, Ordering::Relaxed);
-
-        self.version.fetch_add(1, Ordering::Release);
-    }
-
-    fn read(&self) -> (u64, Sample) {
-        loop {
-            let version = self.version.load(Ordering::Acquire);
-            if version & 1 != 0 {
-                spin_loop();
-                continue;
-            }
-
-            let sample = Sample {
-                initial_epoch_ns: self.initial_epoch_ns.load(Ordering::Relaxed),
-                initial_nano_time: self.initial_nano_time.load(Ordering::Relaxed),
-                within_threshold: self.within_threshold.load(Ordering::Relaxed),
-            };
-            let confirmed_version = self.version.load(Ordering::Acquire);
-
-            if version == confirmed_version {
-                return (version, sample);
-            }
-
-            spin_loop();
-        }
-    }
-}
-
 /// Epoch-nanosecond clock derived from sampled epoch milliseconds and a
 /// monotonic nanosecond source.
 ///
-/// Normal reads are lock-free and allocation-free. Explicit sampling and
-/// automatically triggered resampling are serialized by a mutex.
+/// As in Agrona Java, each sampler independently builds an immutable sample
+/// and atomically replaces the published snapshot. Sampling is not serialized,
+/// and normal reads are lock-free and allocation-free.
 #[derive(Debug)]
 pub struct OffsetEpochNanoClock<E = SystemEpochClock, N = SystemNanoClock> {
     epoch_clock: E,
     nano_clock: N,
     config: OffsetEpochNanoClockConfig,
-    sample: PublishedSample,
-    sample_lock: Mutex<()>,
+    sample: ArcSwap<Sample>,
 }
 
 impl OffsetEpochNanoClock<SystemEpochClock, SystemNanoClock> {
@@ -218,8 +159,11 @@ where
             epoch_clock,
             nano_clock,
             config,
-            sample: PublishedSample::empty(),
-            sample_lock: Mutex::new(()),
+            sample: ArcSwap::from_pointee(Sample {
+                initial_epoch_ns: 0,
+                initial_nano_time: 0,
+                within_threshold: false,
+            }),
         };
         clock.sample()?;
         Ok(clock)
@@ -232,20 +176,18 @@ where
 
     /// Explicitly sample the relationship between epoch and monotonic time.
     pub fn sample(&self) -> Result<(), OffsetEpochNanoClockError> {
-        let _guard = self
-            .sample_lock
-            .lock()
-            .map_err(|_| OffsetEpochNanoClockError::SamplingLockPoisoned)?;
-        self.sample_unlocked()
+        let sample = self.measure_sample()?;
+        self.sample.store(Arc::new(sample));
+        Ok(())
     }
 
     /// Return whether the current sample met the configured threshold.
     #[inline]
     pub fn is_within_threshold(&self) -> bool {
-        self.sample.read().1.within_threshold
+        self.sample.load_full().within_threshold
     }
 
-    fn sample_unlocked(&self) -> Result<(), OffsetEpochNanoClockError> {
+    fn measure_sample(&self) -> Result<Sample, OffsetEpochNanoClockError> {
         let mut best_sample = None;
         let mut best_window_ns = i64::MAX;
 
@@ -268,8 +210,7 @@ where
             };
 
             if sample.within_threshold {
-                self.sample.publish(sample);
-                return Ok(());
+                return Ok(sample);
             }
 
             if window_ns < best_window_ns {
@@ -278,22 +219,7 @@ where
             }
         }
 
-        let sample = best_sample.ok_or(OffsetEpochNanoClockError::NoValidSample)?;
-        self.sample.publish(sample);
-        Ok(())
-    }
-
-    fn sample_if_unchanged(&self, observed_version: u64) -> Result<(), OffsetEpochNanoClockError> {
-        let _guard = self
-            .sample_lock
-            .lock()
-            .map_err(|_| OffsetEpochNanoClockError::SamplingLockPoisoned)?;
-
-        if self.sample.version.load(Ordering::Acquire) == observed_version {
-            self.sample_unlocked()?;
-        }
-
-        Ok(())
+        best_sample.ok_or(OffsetEpochNanoClockError::NoValidSample)
     }
 
     #[inline]
@@ -311,18 +237,21 @@ where
 {
     #[inline]
     fn nano_time(&self) -> i64 {
-        let (version, sample) = self.sample.read();
-        let nano_time = self.nano_clock.nano_time();
-        let adjustment = nano_time.wrapping_sub(sample.initial_nano_time);
+        loop {
+            let sample = *self.sample.load_full();
+            let nano_time = self.nano_clock.nano_time();
+            let adjustment = nano_time.wrapping_sub(sample.initial_nano_time);
 
-        if adjustment < 0 || adjustment > self.config.resample_interval_ns {
-            let _ = self.sample_if_unchanged(version);
-            let (_, current_sample) = self.sample.read();
-            let current_nano_time = self.nano_clock.nano_time();
-            return self.time_from_sample(current_sample, current_nano_time);
+            if adjustment < 0 || adjustment > self.config.resample_interval_ns {
+                if self.sample().is_err() {
+                    let current_nano_time = self.nano_clock.nano_time();
+                    return self.time_from_sample(sample, current_nano_time);
+                }
+                continue;
+            }
+
+            return self.time_from_sample(sample, nano_time);
         }
-
-        self.time_from_sample(sample, nano_time)
     }
 }
 
@@ -339,30 +268,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn published_sample_is_coherent_during_concurrent_updates() {
-        let published = Arc::new(PublishedSample::empty());
-        published.publish(Sample {
+    fn immutable_sample_is_coherent_during_concurrent_replacement() {
+        let published = Arc::new(ArcSwap::from_pointee(Sample {
             initial_epoch_ns: 0,
             initial_nano_time: !0,
             within_threshold: true,
-        });
+        }));
         let running = Arc::new(AtomicBool::new(true));
 
         let writer_sample = Arc::clone(&published);
         let writer_running = Arc::clone(&running);
         let writer = thread::spawn(move || {
             for value in 1..100_000_i64 {
-                writer_sample.publish(Sample {
+                writer_sample.store(Arc::new(Sample {
                     initial_epoch_ns: value,
                     initial_nano_time: !value,
                     within_threshold: value & 1 == 0,
-                });
+                }));
             }
             writer_running.store(false, Ordering::Release);
         });
 
         while running.load(Ordering::Acquire) {
-            let (_, sample) = published.read();
+            let sample = *published.load_full();
             assert_eq!(!sample.initial_epoch_ns, sample.initial_nano_time);
             assert_eq!(sample.initial_epoch_ns & 1 == 0, sample.within_threshold);
         }

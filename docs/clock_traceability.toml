@@ -11,9 +11,9 @@ applicability = "mandatory"
 claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["public-api", "domain-separation", "documentation"]
 implementation_state = "implemented"
-implementation_links = ["src/clock/mod.rs"]
+implementation_links = ["src/clock/mod.rs", "src/clock/epoch_clock.rs", "src/clock/epoch_micro_clock.rs", "src/clock/epoch_nano_clock.rs", "src/clock/nano_clock.rs"]
 evidence_state = "partial"
-evidence_links = ["tests/clock_behavior.rs", "src/clock/mod.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["tests/clock_domains.rs", "src/clock/mod.rs", "docs/CLOCK_EVIDENCE.md"]
 verified_obligations = ["public-api", "domain-separation", "documentation"]
 verified_surfaces = ["std-linux"]
 verified_revision = "uncommitted working tree, 2026-07-27"
@@ -29,9 +29,9 @@ applicability = "mandatory"
 claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["milliseconds", "microseconds", "nanoseconds", "zero-sized", "numeric-boundary"]
 implementation_state = "implemented"
-implementation_links = ["src/clock/system.rs"]
+implementation_links = ["src/clock/system_epoch_clock.rs", "src/clock/system_epoch_micro_clock.rs", "src/clock/system_epoch_nano_clock.rs", "src/clock/system_time.rs"]
 evidence_state = "partial"
-evidence_links = ["src/clock/system.rs", "tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["src/clock/system_time.rs", "tests/clock_system_epoch_clock.rs", "tests/clock_system_epoch_micro_clock.rs", "tests/clock_system_epoch_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
 verified_obligations = ["milliseconds", "microseconds", "nanoseconds", "zero-sized", "numeric-boundary"]
 verified_surfaces = ["std-linux"]
 verified_revision = "uncommitted working tree, 2026-07-27"
@@ -47,9 +47,9 @@ applicability = "mandatory"
 claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["zero-sized", "monotonic-order", "elapsed-time", "wraparound"]
 implementation_state = "implemented"
-implementation_links = ["src/clock/system.rs"]
+implementation_links = ["src/clock/system_nano_clock.rs"]
 evidence_state = "partial"
-evidence_links = ["src/clock/system.rs", "tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["src/clock/system_nano_clock.rs", "tests/clock_system_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
 verified_obligations = ["zero-sized", "monotonic-order", "elapsed-time", "wraparound"]
 verified_surfaces = ["std-linux"]
 verified_revision = "uncommitted working tree, 2026-07-27"
@@ -65,9 +65,9 @@ applicability = "mandatory"
 claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["unique-writer", "cloneable-readers", "initial-value", "provider-contract"]
 implementation_state = "implemented"
-implementation_links = ["src/clock/cached.rs"]
+implementation_links = ["src/clock/cached_epoch_clock.rs", "src/clock/cached_nano_clock.rs", "src/clock/atomic_clock_value.rs"]
 evidence_state = "partial"
-evidence_links = ["src/clock/cached.rs", "tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["src/clock/cached_epoch_clock.rs", "src/clock/cached_nano_clock.rs", "tests/clock_cached_epoch_clock.rs", "tests/clock_cached_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
 verified_obligations = ["unique-writer", "cloneable-readers", "initial-value", "provider-contract"]
 verified_surfaces = ["std-linux"]
 verified_revision = "uncommitted working tree, 2026-07-27"
@@ -83,9 +83,9 @@ applicability = "mandatory"
 claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["update", "advance", "wraparound", "release-acquire", "concurrency"]
 implementation_state = "implemented"
-implementation_links = ["src/clock/cached.rs"]
+implementation_links = ["src/clock/cached_epoch_clock.rs", "src/clock/cached_nano_clock.rs", "src/clock/atomic_clock_value.rs"]
 evidence_state = "partial"
-evidence_links = ["src/clock/cached.rs", "tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["src/clock/atomic_clock_value.rs", "tests/clock_cached_epoch_clock.rs", "tests/clock_cached_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
 verified_obligations = ["update", "advance", "wraparound", "release-acquire", "concurrency"]
 verified_surfaces = ["std-linux"]
 verified_revision = "uncommitted working tree, 2026-07-27"
@@ -101,9 +101,9 @@ applicability = "mandatory"
 claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["defaults", "retry-boundary", "threshold-boundary", "interval-boundary", "construction-error"]
 implementation_state = "implemented"
-implementation_links = ["src/clock/offset.rs"]
+implementation_links = ["src/clock/offset_epoch_nano_clock.rs"]
 evidence_state = "partial"
-evidence_links = ["tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["tests/clock_offset_epoch_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
 verified_obligations = ["defaults", "retry-boundary", "threshold-boundary", "interval-boundary", "construction-error"]
 verified_surfaces = ["std-linux"]
 verified_revision = "uncommitted working tree, 2026-07-27"
@@ -119,9 +119,9 @@ applicability = "mandatory"
 claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["sample-order", "midpoint", "strict-threshold", "narrowest-fallback", "bounded-retries", "no-valid-sample"]
 implementation_state = "implemented"
-implementation_links = ["src/clock/offset.rs"]
+implementation_links = ["src/clock/offset_epoch_nano_clock.rs"]
 evidence_state = "partial"
-evidence_links = ["tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["tests/clock_offset_epoch_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
 verified_obligations = ["sample-order", "midpoint", "strict-threshold", "narrowest-fallback", "bounded-retries", "no-valid-sample"]
 verified_surfaces = ["std-linux"]
 verified_revision = "uncommitted working tree, 2026-07-27"
@@ -131,20 +131,20 @@ remaining_gaps = ["macOS and Windows sampling evidence is pending."]
 [[requirements]]
 id = "CLK-OFFSET-003"
 source = "docs/CLOCK_SPEC.md#clk-offset-003--coherent-offset-reads-and-resampling"
-parent_or_rationale = "DEC-CLOCK-001 lock-free normal reads and serialized resampling"
+parent_or_rationale = "Agrona Java volatile immutable TimeFields publication without sampling serialization"
 owner = "clock"
 applicability = "mandatory"
 claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
-closure_obligations = ["coherent-snapshot", "normal-read", "interval-resample", "backward-resample", "concurrent-sampling"]
+closure_obligations = ["immutable-snapshot", "atomic-replacement", "wait-free-snapshot-load", "normal-read", "interval-resample", "backward-resample", "x86_64-ordering", "aarch64-ordering"]
 implementation_state = "implemented"
-implementation_links = ["src/clock/offset.rs"]
+implementation_links = ["src/clock/offset_epoch_nano_clock.rs", "Cargo.lock"]
 evidence_state = "partial"
-evidence_links = ["src/clock/offset.rs", "tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
-verified_obligations = ["coherent-snapshot", "normal-read", "interval-resample", "backward-resample", "concurrent-sampling"]
+evidence_links = ["src/clock/offset_epoch_nano_clock.rs", "tests/clock_offset_epoch_nano_clock.rs", "tests/clock_allocation.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["immutable-snapshot", "atomic-replacement", "wait-free-snapshot-load", "normal-read", "interval-resample", "backward-resample", "x86_64-ordering"]
 verified_surfaces = ["std-linux"]
 verified_revision = "uncommitted working tree, 2026-07-27"
 verified_environment = "Rust 1.93.0, Debian Linux x86_64"
-remaining_gaps = ["macOS and Windows concurrency evidence and a dedicated weak-memory model check are pending."]
+remaining_gaps = ["Native AArch64 execution and the complete revised Linux, macOS, and Windows CI matrix are pending."]
 
 [[requirements]]
 id = "CLK-OFFSET-004"
@@ -155,14 +155,32 @@ applicability = "mandatory"
 claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["automatic-failure", "sample-retention", "explicit-error"]
 implementation_state = "implemented"
-implementation_links = ["src/clock/offset.rs"]
+implementation_links = ["src/clock/offset_epoch_nano_clock.rs"]
 evidence_state = "partial"
-evidence_links = ["tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+evidence_links = ["tests/clock_offset_epoch_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
 verified_obligations = ["automatic-failure", "sample-retention", "explicit-error"]
 verified_surfaces = ["std-linux"]
 verified_revision = "uncommitted working tree, 2026-07-27"
 verified_environment = "Rust 1.93.0, Debian Linux x86_64"
 remaining_gaps = ["macOS and Windows failure-path evidence is pending."]
+
+[[requirements]]
+id = "CLK-OFFSET-005"
+source = "docs/CLOCK_SPEC.md#clk-offset-005--non-serialized-sampling"
+parent_or_rationale = "Agrona Java permits concurrent sample calls and atomically publishes each immutable TimeFields result"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["no-sampling-lock", "overlapping-sampling", "last-replacement-wins", "panic-recovery", "concurrent-readers"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/offset_epoch_nano_clock.rs", "Cargo.lock"]
+evidence_state = "partial"
+evidence_links = ["src/clock/offset_epoch_nano_clock.rs", "tests/clock_offset_epoch_nano_clock.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["no-sampling-lock", "overlapping-sampling", "last-replacement-wins", "panic-recovery", "concurrent-readers"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["The revised non-serialized sampling tests have not run on macOS and Windows."]
 
 [[requirements]]
 id = "CLK-ALLOC-001"
@@ -173,7 +191,7 @@ applicability = "mandatory"
 claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["system-read", "cached-read", "cached-update", "cached-advance", "offset-read", "status-read"]
 implementation_state = "implemented"
-implementation_links = ["src/clock/system.rs", "src/clock/cached.rs", "src/clock/offset.rs"]
+implementation_links = ["src/clock/system_epoch_clock.rs", "src/clock/system_epoch_micro_clock.rs", "src/clock/system_epoch_nano_clock.rs", "src/clock/system_nano_clock.rs", "src/clock/cached_epoch_clock.rs", "src/clock/cached_nano_clock.rs", "src/clock/offset_epoch_nano_clock.rs"]
 evidence_state = "partial"
 evidence_links = ["tests/clock_allocation.rs", "docs/CLOCK_EVIDENCE.md"]
 verified_obligations = ["system-read", "cached-read", "cached-update", "cached-advance", "offset-read", "status-read"]
@@ -198,7 +216,25 @@ verified_obligations = ["safe-library", "std", "atomic64", "rust-1.85"]
 verified_surfaces = ["std-linux"]
 verified_revision = "uncommitted working tree, 2026-07-27"
 verified_environment = "Rust 1.93.0 and Rust 1.85.0, Debian Linux x86_64"
-remaining_gaps = ["The current working tree has not run in macOS and Windows CI."]
+remaining_gaps = ["The revised immutable-snapshot implementation has not run in Linux, macOS, Windows, and native AArch64 CI."]
+
+[[requirements]]
+id = "CLK-PORT-002"
+source = "docs/CLOCK_SPEC.md#clk-port-002--native-architecture-validation"
+parent_or_rationale = "Weak-memory publication must execute natively on both strong- and weak-order CPU architectures"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["native-x86_64", "native-aarch64"]
+closure_obligations = ["concurrency-suite-x86_64", "concurrency-suite-aarch64"]
+implementation_state = "implemented"
+implementation_links = [".github/workflows/ci.yml"]
+evidence_state = "partial"
+evidence_links = [".github/workflows/ci.yml", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["concurrency-suite-x86_64"]
+verified_surfaces = ["native-x86_64"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["The revised concurrency suite has not run on the configured native AArch64 runners."]
 
 [[gates]]
 id = "CLOCK-READY"
@@ -212,8 +248,10 @@ requirements = [
     "CLK-OFFSET-002",
     "CLK-OFFSET-003",
     "CLK-OFFSET-004",
+    "CLK-OFFSET-005",
     "CLK-ALLOC-001",
     "CLK-PORT-001",
+    "CLK-PORT-002",
 ]
 state = "partial"
 acceptance_evidence = ["docs/CLOCK_EVIDENCE.md"]
