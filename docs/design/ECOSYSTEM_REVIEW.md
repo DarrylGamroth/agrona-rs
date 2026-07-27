@@ -1,5 +1,8 @@
 # Rust ecosystem review
 
+> Maintainer design record. For package usage, see the
+> [User Guide](../USER_GUIDE.md).
+
 ## Status
 
 This is the recorded G2 ecosystem input for the

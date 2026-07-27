@@ -1,5 +1,8 @@
 # agrona-rs Agent specification
 
+> Maintainer specification. For package usage, see the
+> [User Guide](../../USER_GUIDE.md).
+
 Status: active
 
 Baseline: Agrona Java commit
@@ -11,7 +14,7 @@ pointer-width and 64-bit atomics. `DynamicCompositeAgent` is excluded.
 ## Purpose and authority
 
 This document is the normative Rust contract for the Agent increment selected
-by `DEC-AGENT-001` in the [delivery plan](PORTING_PLAN.md). Agrona Java is the
+by `DEC-AGENT-001` in the [delivery plan](../PORTING_PLAN.md). Agrona Java is the
 behavioral authority. Aeron C is a native ownership and atomic-ordering
 reference. `Agent.jl` is an example only.
 

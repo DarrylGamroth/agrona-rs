@@ -1,5 +1,8 @@
 # Clock verification evidence
 
+> Maintainer verification record. For package usage, see the
+> [User Guide](../../USER_GUIDE.md).
+
 ## Scope and baseline
 
 - Requirements: `CLK-DOM-001` through `CLK-PORT-002` in

@@ -39,11 +39,28 @@ allocation. Shutdown remains cooperative, so blocking Agent code must provide
 an application-owned wakeup mechanism.
 
 For the selected scope and compatibility decisions see the
-[Porting Plan](docs/PORTING_PLAN.md). Normative behavior and verification are
-recorded in the [Agent specification](docs/AGENT_SPEC.md),
-[Agent evidence](docs/AGENT_EVIDENCE.md), and
-[Clock evidence](docs/CLOCK_EVIDENCE.md). Exact upstream revisions are in
+[Porting Plan](docs/design/PORTING_PLAN.md). Normative behavior and verification are
+recorded in the [Agent specification](docs/design/agent/AGENT_SPEC.md),
+[Agent evidence](docs/design/agent/AGENT_EVIDENCE.md), and
+[Clock evidence](docs/design/clock/CLOCK_EVIDENCE.md). Exact upstream revisions are in
 [UPSTREAM.md](UPSTREAM.md).
+
+Documentation
+-------------
+
+Start with the [User Guide](docs/USER_GUIDE.md) for installation, clock
+selection, implementing an Agent, choosing an execution model and idle
+strategy, error handling, and cooperative shutdown.
+
+Runnable examples are available for [clocks](examples/clocks.rs) and a
+[dedicated Agent runner](examples/agent_runner.rs). They can be run with:
+
+    $ cargo run --example clocks
+    $ cargo run --example agent_runner
+
+The guide is also the crate-level rustdoc, and all of its Rust examples are
+compiled and run as documentation tests. Build the complete API documentation
+locally with `cargo doc --open`.
 
 Use
 ---
@@ -56,8 +73,6 @@ crates.io or docs.rs. Depend on a release tag directly from GitHub:
 [dependencies]
 agrona = { git = "https://github.com/DarrylGamroth/agrona-rs", tag = "v0.1.0" }
 ```
-
-Build API documentation locally with `cargo doc --open`.
 
 Build
 -----

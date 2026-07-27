@@ -3,12 +3,7 @@
 
 #![deny(unsafe_op_in_unsafe_fn)]
 #![deny(missing_docs)]
-
-//! Unofficial, idiomatic Rust port of selected
-//! [Agrona](https://github.com/aeron-io/agrona) components.
-//!
-//! The Clock family and selected Agent family are implemented against the
-//! repository's normative specifications.
+#![doc = include_str!("../docs/USER_GUIDE.md")]
 
 pub mod agent;
 pub mod clock;

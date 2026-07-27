@@ -24,7 +24,7 @@ revision:
 - `OffsetEpochNanoClock`.
 
 The corresponding Rust implementation is under `src/clock/`. Behavioral and
-allocation evidence is recorded in `docs/CLOCK_EVIDENCE.md`.
+allocation evidence is recorded in `docs/design/clock/CLOCK_EVIDENCE.md`.
 
 The Agent implementation maps to Agrona's `Agent`,
 `AgentTerminationException`, `AgentInvoker`, `AgentRunner`,
