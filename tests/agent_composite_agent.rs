@@ -4,6 +4,7 @@ use agrona::agent::{
     Agent, AgentError, AgentResult, BoxError, CompositeAgent, CompositeAgentError,
 };
 use std::collections::VecDeque;
+use std::error::Error;
 use std::io;
 use std::sync::{Arc, Mutex};
 
@@ -22,7 +23,14 @@ impl Agent for Part {
 
 #[test]
 fn rejects_empty_and_builds_exact_role() {
-    assert!(CompositeAgent::new(vec![]).is_err());
+    let empty = match CompositeAgent::new(vec![]) {
+        Ok(_) => panic!("empty composite must be rejected"),
+        Err(error) => error,
+    };
+    assert_eq!(
+        "CompositeAgent requires at least one Agent",
+        empty.to_string()
+    );
     let composite = CompositeAgent::new(vec![
         Box::new(Part {
             name: "one",
@@ -128,6 +136,12 @@ fn lifecycle_attempts_every_agent_and_aggregates_errors_in_order() {
     let start = start.downcast_ref::<CompositeAgentError>().unwrap();
     assert_eq!("on_start", start.operation());
     assert_eq!(["one", "three"], error_messages(start).as_slice());
+    assert_eq!(
+        "CompositeAgent on_start failed for 2 Agent(s)",
+        start.to_string()
+    );
+    assert_eq!("one", start.source().unwrap().to_string());
+    assert!(format!("{start:?}").contains("CompositeAgentError"));
 
     let close = composite.on_close().unwrap_err();
     let close = close.downcast_ref::<CompositeAgentError>().unwrap();

@@ -165,3 +165,27 @@ fn error_handler_panic_is_not_converted_to_an_agent_error() {
     invoker.close();
     assert_eq!(1, invoker.agent().closes);
 }
+
+#[test]
+fn close_before_start_is_idempotent_and_agent_accessors_preserve_ownership() {
+    let mut invoker = AgentInvoker::new(
+        Scripted {
+            starts: 0,
+            closes: 0,
+            work: vec![],
+        },
+        |_: &(dyn Error + Send + Sync + 'static)| {},
+        None,
+    );
+
+    assert_eq!(0, invoker.invoke());
+    invoker.agent_mut().starts = 7;
+    invoker.close();
+    invoker.close();
+    assert!(!invoker.is_started());
+    assert!(invoker.is_closed());
+
+    let agent = invoker.into_agent();
+    assert_eq!(7, agent.starts);
+    assert_eq!(1, agent.closes);
+}

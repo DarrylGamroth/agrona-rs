@@ -41,7 +41,14 @@ fn runs_on_named_thread_and_returns_agent_after_cleanup() {
         |_: &(dyn Error + Send + Sync + 'static)| {},
         Some(AgentErrorCounter::default()),
     );
-    let agent = runner.start().unwrap().join().unwrap();
+    let handle = runner.start().unwrap();
+    assert_eq!(Some("runner-role"), handle.worker_thread().name());
+    while !handle.is_finished() {
+        std::thread::yield_now();
+    }
+    assert!(!handle.is_running());
+    assert!(handle.is_closed());
+    let agent = handle.join().unwrap();
     assert_eq!(Some("runner-role".to_owned()), *name.lock().unwrap());
     assert!(*closed.lock().unwrap());
     assert_eq!("runner-role", agent.role_name());
@@ -61,6 +68,39 @@ fn close_before_start_calls_cleanup_without_spawning() {
     );
     let _ = runner.close();
     assert!(*closed.lock().unwrap());
+}
+
+struct CloseFails;
+
+impl Agent for CloseFails {
+    fn role_name(&self) -> &str {
+        "close-fails"
+    }
+
+    fn do_work(&mut self) -> AgentResult {
+        Err(AgentTermination::expected().into())
+    }
+
+    fn on_close(&mut self) -> Result<(), BoxError> {
+        Err(Box::new(io::Error::other("close failed")))
+    }
+}
+
+#[test]
+fn unstarted_close_reports_recoverable_cleanup_failure() {
+    let reports = Arc::new(Mutex::new(Vec::new()));
+    let observer = Arc::clone(&reports);
+    let runner = AgentRunner::new(
+        CloseFails,
+        NoOpIdleStrategy,
+        move |error: &(dyn Error + Send + Sync + 'static)| {
+            observer.lock().unwrap().push(error.to_string());
+        },
+        None,
+    );
+    assert!(format!("{runner:?}").starts_with("AgentRunner"));
+    let _ = runner.close();
+    assert_eq!(&["close failed"], reports.lock().unwrap().as_slice());
 }
 
 struct ErrorThenStop {
@@ -192,6 +232,129 @@ fn panic_remains_fatal_but_join_retains_agent_and_cleanup_result() {
     assert!(close_panic.is_none());
 }
 
+struct UnexpectedThenCloseFails;
+
+impl Agent for UnexpectedThenCloseFails {
+    fn role_name(&self) -> &str {
+        "unexpected-close-error"
+    }
+
+    fn do_work(&mut self) -> AgentResult {
+        Err(AgentTermination::unexpected()
+            .with_message("unexpected stop")
+            .into())
+    }
+
+    fn on_close(&mut self) -> Result<(), BoxError> {
+        Err(Box::new(io::Error::other("cleanup error")))
+    }
+}
+
+#[test]
+fn unexpected_termination_and_cleanup_error_are_reported_without_counting() {
+    let reports = Arc::new(Mutex::new(Vec::new()));
+    let observer = Arc::clone(&reports);
+    let counter = AgentErrorCounter::default();
+    let _ = AgentRunner::new(
+        UnexpectedThenCloseFails,
+        NoOpIdleStrategy,
+        move |error: &(dyn Error + Send + Sync + 'static)| {
+            observer.lock().unwrap().push(error.to_string());
+        },
+        Some(counter.clone()),
+    )
+    .start()
+    .unwrap()
+    .join()
+    .unwrap();
+
+    assert_eq!(
+        &[
+            "unexpected Agent termination: unexpected stop",
+            "cleanup error"
+        ],
+        reports.lock().unwrap().as_slice()
+    );
+    assert_eq!(0, counter.count());
+}
+
+#[derive(Debug)]
+struct PanicsDuringWorkAndClose;
+
+impl Agent for PanicsDuringWorkAndClose {
+    fn role_name(&self) -> &str {
+        "double-panic"
+    }
+
+    fn do_work(&mut self) -> AgentResult {
+        panic!("work panic")
+    }
+
+    fn on_close(&mut self) -> Result<(), BoxError> {
+        panic!("close panic")
+    }
+}
+
+#[test]
+fn join_error_retains_primary_and_cleanup_panics() {
+    let result = AgentRunner::new(
+        PanicsDuringWorkAndClose,
+        NoOpIdleStrategy,
+        |_: &(dyn Error + Send + Sync + 'static)| {},
+        None,
+    )
+    .start()
+    .unwrap()
+    .join();
+    let error = result.unwrap_err();
+    assert_eq!("Agent runner and cleanup panicked", error.to_string());
+    assert!(format!("{error:?}").contains("close_also_panicked: true"));
+    let (_, primary, close) = error.into_parts();
+    assert_eq!(Some(&"work panic"), primary.downcast_ref::<&'static str>());
+    assert_eq!(
+        Some(&"close panic"),
+        close.as_ref().unwrap().downcast_ref::<&'static str>()
+    );
+}
+
+#[derive(Debug)]
+struct PanicsOnlyDuringClose;
+
+impl Agent for PanicsOnlyDuringClose {
+    fn role_name(&self) -> &str {
+        "close-panic"
+    }
+
+    fn do_work(&mut self) -> AgentResult {
+        Err(AgentTermination::expected().into())
+    }
+
+    fn on_close(&mut self) -> Result<(), BoxError> {
+        panic!("close-only panic")
+    }
+}
+
+#[test]
+fn cleanup_only_panic_becomes_the_primary_join_failure() {
+    let result = AgentRunner::new(
+        PanicsOnlyDuringClose,
+        NoOpIdleStrategy,
+        |_: &(dyn Error + Send + Sync + 'static)| {},
+        None,
+    )
+    .start()
+    .unwrap()
+    .join();
+    let error = result.unwrap_err();
+    assert_eq!("Agent runner panicked", error.to_string());
+    let (_, primary, close) = error.into_parts();
+    assert_eq!(
+        Some(&"close-only panic"),
+        primary.downcast_ref::<&'static str>()
+    );
+    assert!(close.is_none());
+}
+
 struct BlocksUntilReleased {
     entered: Arc<AtomicBool>,
     released: Arc<AtomicBool>,
@@ -265,6 +428,14 @@ fn spawn_failure_returns_the_complete_unstarted_runner() {
         Ok(_) => panic!("an impossibly large stack must fail to spawn"),
         Err(error) => error,
     };
+    assert!(error.error().kind() != io::ErrorKind::NotFound);
+    assert!(
+        error
+            .to_string()
+            .starts_with("failed to start Agent runner:")
+    );
+    assert!(error.source().is_some());
+    assert!(format!("{error:?}").contains("AgentRunnerStartError"));
     let (_source, runner) = error.into_parts();
     let agent = runner.close();
     assert!(*agent.closed.lock().unwrap());

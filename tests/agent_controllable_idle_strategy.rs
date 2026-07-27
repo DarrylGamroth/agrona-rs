@@ -8,5 +8,18 @@ fn publishes_typed_and_unknown_modes() {
     assert_eq!(1, control.raw());
     strategy.idle(0);
     control.set_raw(99);
+    strategy.idle(0);
+
+    control.set(ControllableIdleStrategyMode::BusySpin);
+    strategy.idle(0);
+    control.set(ControllableIdleStrategyMode::Yield);
+    strategy.idle(0);
+    control.set(ControllableIdleStrategyMode::Park);
+    strategy.idle(0);
+    control.set(ControllableIdleStrategyMode::NotControlled);
+    strategy.idle(0);
     strategy.idle(1);
+
+    let mut default_strategy = ControllableIdleStrategy::default();
+    default_strategy.idle(1);
 }

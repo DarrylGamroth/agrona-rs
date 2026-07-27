@@ -42,8 +42,7 @@ fn release_published_stop_is_observed_by_busy_worker() {
         std::thread::yield_now();
     }
 
-    handle.request_stop();
-    assert!(!handle.is_running());
-    let agent = handle.join().unwrap();
+    assert!(handle.is_running());
+    let agent = handle.close().unwrap();
     assert!(agent.calls.load(Ordering::Relaxed) > 0);
 }

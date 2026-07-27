@@ -73,7 +73,7 @@ cargo llvm-cov --workspace --all-features --summary-only
 python3 /home/dgamroth/.codex/skills/local/spec-driven-implementation/scripts/check_traceability.py --ledger docs/agent_traceability.toml --root . --strict
 ```
 
-The complete crate reports 84.14% line coverage locally. Agent tests are kept
+The complete crate reports 94.56% line coverage locally. Agent tests are kept
 in separate component files, with private unit tests used only for exact
 backoff state inspection.
 
