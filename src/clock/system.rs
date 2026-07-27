@@ -109,15 +109,23 @@ mod tests {
 
     #[test]
     fn signed_epoch_conversion_handles_both_sides_of_epoch() {
-        let after = UNIX_EPOCH + Duration::new(2, 345_678_901);
-        let before = UNIX_EPOCH - Duration::new(2, 345_678_901);
+        // Windows represents SystemTime in 100-nanosecond intervals.
+        let representable_duration = Duration::new(2, 345_678_900);
+        let after = UNIX_EPOCH + representable_duration;
+        let before = UNIX_EPOCH - representable_duration;
 
         assert_eq!(2_345, signed_epoch_units(after, 1_000));
         assert_eq!(-2_346, signed_epoch_units(before, 1_000));
         assert_eq!(2_345_678, signed_epoch_units(after, 1_000_000));
         assert_eq!(-2_345_679, signed_epoch_units(before, 1_000_000));
-        assert_eq!(2_345_678_901, signed_epoch_units(after, NANOS_PER_SECOND));
-        assert_eq!(-2_345_678_901, signed_epoch_units(before, NANOS_PER_SECOND));
+        assert_eq!(2_345_678_900, signed_epoch_units(after, NANOS_PER_SECOND));
+        assert_eq!(-2_345_678_900, signed_epoch_units(before, NANOS_PER_SECOND));
+
+        let exact_duration = Duration::new(2, 345_678_901);
+        assert_eq!(
+            2_345_678_901,
+            duration_units(exact_duration, NANOS_PER_SECOND)
+        );
     }
 
     #[test]
