@@ -1,7 +1,7 @@
 agrona-rs
 =========
 
-[![Documentation](https://docs.rs/agrona/badge.svg)](https://docs.rs/agrona)
+[![GitHub release](https://img.shields.io/github/v/release/DarrylGamroth/agrona-rs)](https://github.com/DarrylGamroth/agrona-rs/releases)
 [![GitHub](https://img.shields.io/github/license/DarrylGamroth/agrona-rs.svg)](LICENSE)
 
 [![Actions Status](https://github.com/DarrylGamroth/agrona-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/DarrylGamroth/agrona-rs/actions)
@@ -44,6 +44,20 @@ recorded in the [Agent specification](docs/AGENT_SPEC.md),
 [Agent evidence](docs/AGENT_EVIDENCE.md), and
 [Clock evidence](docs/CLOCK_EVIDENCE.md). Exact upstream revisions are in
 [UPSTREAM.md](UPSTREAM.md).
+
+Use
+---
+
+Releases are published only through
+[GitHub Releases](https://github.com/DarrylGamroth/agrona-rs/releases), not
+crates.io or docs.rs. Depend on a release tag directly from GitHub:
+
+```toml
+[dependencies]
+agrona = { git = "https://github.com/DarrylGamroth/agrona-rs", tag = "v0.1.0" }
+```
+
+Build API documentation locally with `cargo doc --open`.
 
 Build
 -----

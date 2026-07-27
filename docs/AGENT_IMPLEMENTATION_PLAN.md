@@ -4,8 +4,8 @@
 
 This is the maintained design and delivery record for the selected Agrona
 Agent surface. The implementation and local Linux acceptance evidence are
-complete; the cross-platform evidence gate remains partial until the current
-revision passes GitHub CI.
+complete, and the cross-platform evidence gate passed on native Linux x86_64,
+Linux AArch64, macOS AArch64, and Windows x86_64.
 
 The selected scope is fixed:
 

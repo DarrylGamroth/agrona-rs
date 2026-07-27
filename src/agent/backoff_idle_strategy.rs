@@ -40,8 +40,8 @@ impl BackoffIdleStrategy {
     ///
     /// Java-equivalent arithmetic is claimed when both counts are at most
     /// `i64::MAX` and both durations are at most `i64::MAX / 2` nanoseconds.
-    /// Larger Rust inputs remain safe and use wrapping counters and saturating
-    /// duration doubling.
+    /// Larger count inputs remain safe and are compared using their signed
+    /// Java `long` bit patterns. Larger durations use saturating doubling.
     #[must_use]
     pub const fn new(
         max_spins: u64,
@@ -83,14 +83,14 @@ impl IdleStrategy for BackoffIdleStrategy {
             State::Spinning => {
                 std::hint::spin_loop();
                 self.spins = self.spins.wrapping_add(1);
-                if self.spins > self.max_spins {
+                if (self.spins as i64) > (self.max_spins as i64) {
                     self.state = State::Yielding;
                     self.yields = 0;
                 }
             }
             State::Yielding => {
                 self.yields = self.yields.wrapping_add(1);
-                if self.yields > self.max_yields {
+                if (self.yields as i64) > (self.max_yields as i64) {
                     self.state = State::Parking;
                     self.park = self.min_park;
                 } else {
@@ -155,6 +155,25 @@ mod tests {
         assert_eq!(5, strategy.max_yields);
         assert_eq!(Duration::from_nanos(1_000), strategy.min_park);
         assert_eq!(Duration::from_nanos(1_000_000), strategy.max_park);
+    }
+
+    #[test]
+    fn counters_wrap_as_signed_java_longs_at_i64_max() {
+        let mut spinning =
+            BackoffIdleStrategy::new(i64::MAX as u64, 0, Duration::ZERO, Duration::ZERO);
+        spinning.state = State::Spinning;
+        spinning.spins = i64::MAX as u64;
+        spinning.idle_once();
+        assert_eq!(State::Spinning, spinning.state);
+        assert_eq!(i64::MIN, spinning.spins as i64);
+
+        let mut yielding =
+            BackoffIdleStrategy::new(0, i64::MAX as u64, Duration::ZERO, Duration::ZERO);
+        yielding.state = State::Yielding;
+        yielding.yields = i64::MAX as u64;
+        yielding.idle_once();
+        assert_eq!(State::Yielding, yielding.state);
+        assert_eq!(i64::MIN, yielding.yields as i64);
     }
 
     fn state(strategy: &BackoffIdleStrategy) -> (State, u64, u64) {

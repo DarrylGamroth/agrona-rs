@@ -87,7 +87,7 @@ See [`UPSTREAM.md`](../UPSTREAM.md) for revisions and attribution policy.
 - Attribution: substantially derived files retain applicable Real Logic
   notices, add Rubus Technologies Inc. notices, and identify modification for
   Rust.
-- Edition and provisional MSRV: Rust 2024 and Rust 1.85.
+- Edition and MSRV: Rust 2024 and Rust 1.85.
 - Initial platform profile: `std` on Linux, macOS, and Windows targets with
   native 64-bit atomics, exercised on both x86_64 and AArch64.
 - Initial package shape: one `agrona` crate with `clock` and `agent` modules.
@@ -578,8 +578,9 @@ acceptance.
 ### P7 — Agent acceptance and documentation
 
 The complete local behavior, concurrency, liveness, allocation, and benchmark
-suites pass. Cross-platform acceptance remains partial until GitHub CI runs
-the current revision. No stronger portability claim is made.
+suites pass. Cross-platform acceptance passed on native Linux x86_64, Linux
+AArch64, macOS AArch64, and Windows x86_64. No stronger portability claim is
+made.
 
 ## Repository-wide verification
 

@@ -126,8 +126,10 @@ fn steady_state_clock_paths_do_not_allocate() {
             .expect("configuration should be valid"),
     )
     .expect("initial sample should succeed");
-    black_box(offset.nano_time());
-    black_box(offset.is_within_threshold());
+    for _ in 0..1_000 {
+        black_box(offset.nano_time());
+        black_box(offset.is_within_threshold());
+    }
 
     assert_eq!(
         0,

@@ -157,7 +157,7 @@ counting global allocator after warmup.
 ### CLK-PORT-001 — Supported implementation profile
 
 The Clock implementation MUST use safe Rust in the library, require `std` and
-native 64-bit atomics, compile at the provisional Rust 1.85 MSRV, and keep its
+native 64-bit atomics, compile at the Rust 1.85 MSRV, and keep its
 behavioral test suite enabled on Linux, macOS, and Windows.
 
 Verification intent (informative): source inspection plus stable, MSRV, and
