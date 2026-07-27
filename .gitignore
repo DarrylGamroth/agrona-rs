@@ -1,0 +1,7 @@
+/target/
+*.profraw
+*.profdata
+lcov.info
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,27 @@
+[workspace]
+members = ["."]
+resolver = "3"
+
+[package]
+name = "agrona"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["Darryl Gamroth <dgamroth@rubus.ca>"]
+description = "An unofficial, idiomatic Rust port of Agrona's low-latency building blocks"
+readme = "README.md"
+repository = "https://github.com/DarrylGamroth/agrona-rs"
+license = "Apache-2.0"
+keywords = ["agrona", "low-latency", "concurrency", "ring-buffer"]
+categories = ["concurrency", "data-structures"]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lints.rust]
+missing_docs = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+
+[[bench]]
+name = "clocks"
+harness = false

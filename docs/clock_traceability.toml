@@ -1,0 +1,219 @@
+schema_version = 1
+specification_baseline = "docs/CLOCK_SPEC.md active, Agrona d4a47c67258f85b39910c4999da346ead655b736"
+specification_files = ["docs/CLOCK_SPEC.md"]
+
+[[requirements]]
+id = "CLK-DOM-001"
+source = "docs/CLOCK_SPEC.md#clk-dom-001--distinct-time-domains"
+parent_or_rationale = "DEC-CLOCK-001 distinct epoch and monotonic contracts"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["public-api", "domain-separation", "documentation"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/mod.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/clock_behavior.rs", "src/clock/mod.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["public-api", "domain-separation", "documentation"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["macOS and Windows CI evidence is pending."]
+
+[[requirements]]
+id = "CLK-SYS-001"
+source = "docs/CLOCK_SPEC.md#clk-sys-001--system-epoch-clocks"
+parent_or_rationale = "DEC-CLOCK-001 allocation-free system epoch sources"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["milliseconds", "microseconds", "nanoseconds", "zero-sized", "numeric-boundary"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/system.rs"]
+evidence_state = "partial"
+evidence_links = ["src/clock/system.rs", "tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["milliseconds", "microseconds", "nanoseconds", "zero-sized", "numeric-boundary"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["macOS and Windows system-clock evidence is pending."]
+
+[[requirements]]
+id = "CLK-MONO-001"
+source = "docs/CLOCK_SPEC.md#clk-mono-001--system-monotonic-clock"
+parent_or_rationale = "DEC-CLOCK-001 elapsed-time source"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["zero-sized", "monotonic-order", "elapsed-time", "wraparound"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/system.rs"]
+evidence_state = "partial"
+evidence_links = ["src/clock/system.rs", "tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["zero-sized", "monotonic-order", "elapsed-time", "wraparound"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["macOS and Windows monotonic-clock evidence is pending."]
+
+[[requirements]]
+id = "CLK-CACHE-001"
+source = "docs/CLOCK_SPEC.md#clk-cache-001--cached-clock-ownership"
+parent_or_rationale = "DEC-CLOCK-001 single-writer cached clocks"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["unique-writer", "cloneable-readers", "initial-value", "provider-contract"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/cached.rs"]
+evidence_state = "partial"
+evidence_links = ["src/clock/cached.rs", "tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["unique-writer", "cloneable-readers", "initial-value", "provider-contract"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["macOS and Windows compile and behavior evidence is pending."]
+
+[[requirements]]
+id = "CLK-CACHE-002"
+source = "docs/CLOCK_SPEC.md#clk-cache-002--cached-clock-publication"
+parent_or_rationale = "DEC-CLOCK-001 release/acquire publication"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["update", "advance", "wraparound", "release-acquire", "concurrency"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/cached.rs"]
+evidence_state = "partial"
+evidence_links = ["src/clock/cached.rs", "tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["update", "advance", "wraparound", "release-acquire", "concurrency"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["macOS and Windows concurrency evidence is pending."]
+
+[[requirements]]
+id = "CLK-OFFSET-001"
+source = "docs/CLOCK_SPEC.md#clk-offset-001--offset-configuration-and-construction"
+parent_or_rationale = "DEC-CLOCK-001 bounded offset sampling configuration"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["defaults", "retry-boundary", "threshold-boundary", "interval-boundary", "construction-error"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/offset.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["defaults", "retry-boundary", "threshold-boundary", "interval-boundary", "construction-error"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["macOS and Windows configuration evidence is pending."]
+
+[[requirements]]
+id = "CLK-OFFSET-002"
+source = "docs/CLOCK_SPEC.md#clk-offset-002--offset-sampling"
+parent_or_rationale = "DEC-CLOCK-001 Agrona offset sampling behavior"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["sample-order", "midpoint", "strict-threshold", "narrowest-fallback", "bounded-retries", "no-valid-sample"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/offset.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["sample-order", "midpoint", "strict-threshold", "narrowest-fallback", "bounded-retries", "no-valid-sample"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["macOS and Windows sampling evidence is pending."]
+
+[[requirements]]
+id = "CLK-OFFSET-003"
+source = "docs/CLOCK_SPEC.md#clk-offset-003--coherent-offset-reads-and-resampling"
+parent_or_rationale = "DEC-CLOCK-001 lock-free normal reads and serialized resampling"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["coherent-snapshot", "normal-read", "interval-resample", "backward-resample", "concurrent-sampling"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/offset.rs"]
+evidence_state = "partial"
+evidence_links = ["src/clock/offset.rs", "tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["coherent-snapshot", "normal-read", "interval-resample", "backward-resample", "concurrent-sampling"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["macOS and Windows concurrency evidence and a dedicated weak-memory model check are pending."]
+
+[[requirements]]
+id = "CLK-OFFSET-004"
+source = "docs/CLOCK_SPEC.md#clk-offset-004--automatic-resampling-failure"
+parent_or_rationale = "Rust adaptation for a fallible injected monotonic source"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["automatic-failure", "sample-retention", "explicit-error"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/offset.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/clock_behavior.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["automatic-failure", "sample-retention", "explicit-error"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["macOS and Windows failure-path evidence is pending."]
+
+[[requirements]]
+id = "CLK-ALLOC-001"
+source = "docs/CLOCK_SPEC.md#clk-alloc-001--steady-state-allocation"
+parent_or_rationale = "DEC-CLOCK-001 predictable steady-state latency"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["system-read", "cached-read", "cached-update", "cached-advance", "offset-read", "status-read"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/system.rs", "src/clock/cached.rs", "src/clock/offset.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/clock_allocation.rs", "docs/CLOCK_EVIDENCE.md"]
+verified_obligations = ["system-read", "cached-read", "cached-update", "cached-advance", "offset-read", "status-read"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0, Debian Linux x86_64"
+remaining_gaps = ["macOS and Windows allocation evidence is pending."]
+
+[[requirements]]
+id = "CLK-PORT-001"
+source = "docs/CLOCK_SPEC.md#clk-port-001--supported-implementation-profile"
+parent_or_rationale = "agrona-rs initial platform and safety profile"
+owner = "clock"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["safe-library", "std", "atomic64", "rust-1.85", "three-os-ci"]
+implementation_state = "implemented"
+implementation_links = ["src/clock/mod.rs", ".github/workflows/ci.yml", "Cargo.toml"]
+evidence_state = "partial"
+evidence_links = ["docs/CLOCK_EVIDENCE.md", ".github/workflows/ci.yml"]
+verified_obligations = ["safe-library", "std", "atomic64", "rust-1.85"]
+verified_surfaces = ["std-linux"]
+verified_revision = "uncommitted working tree, 2026-07-27"
+verified_environment = "Rust 1.93.0 and Rust 1.85.0, Debian Linux x86_64"
+remaining_gaps = ["The current working tree has not run in macOS and Windows CI."]
+
+[[gates]]
+id = "CLOCK-READY"
+requirements = [
+    "CLK-DOM-001",
+    "CLK-SYS-001",
+    "CLK-MONO-001",
+    "CLK-CACHE-001",
+    "CLK-CACHE-002",
+    "CLK-OFFSET-001",
+    "CLK-OFFSET-002",
+    "CLK-OFFSET-003",
+    "CLK-OFFSET-004",
+    "CLK-ALLOC-001",
+    "CLK-PORT-001",
+]
+state = "partial"
+acceptance_evidence = ["docs/CLOCK_EVIDENCE.md"]
