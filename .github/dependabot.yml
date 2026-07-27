@@ -12,3 +12,7 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # This action's version tag selects the compiler under test. Rust 1.85
+      # is the project's deliberate MSRV, not an outdated action dependency.
+      - dependency-name: dtolnay/rust-toolchain
