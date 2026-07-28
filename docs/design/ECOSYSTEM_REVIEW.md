@@ -67,7 +67,7 @@ review, focused tests, and representative benchmarks.
 | Agrona area | Comparable Rust choices | Semantic assessment | Working G2 disposition |
 |---|---|---|---|
 | Agent protocol and runner | Rust threads; actor frameworks such as [`steady_state`](https://docs.rs/steady_state/) | No maintained crate found with the same small duty-cycle protocol, bounded `do_work` loop, lifecycle, error, idle, composite, and invoker semantics. General actor runtimes impose a different execution model. | **Selected port** by the delivery plan. |
-| Thread placement | [`core_affinity`](https://docs.rs/core_affinity/) | Supplies operating-system CPU affinity. It complements an Agent runner; selecting a Julia or Rust scheduler thread is not equivalent to pinning it to a CPU. | **Adopt** as an optional substrate if affinity is selected. |
+| Thread placement | Application-selected libraries such as [`core_affinity`](https://docs.rs/core_affinity/) | Affinity must be applied by the worker itself before Agent startup. The runner's worker initializer supplies that customization point without selecting deployment policy for the Agrona package. | **Application integration** through the worker initializer; no affinity dependency is selected for the package. |
 | Idle strategies | [`idle`](https://docs.rs/idle/) and `std::thread` | `idle` provides no-op, spin, and sleep, but not the full yield/backoff/reset/controllable family. Any busy strategy also needs a deployment contract covering reserved cores and power. | **Selected port** of all Agrona strategies. |
 | Epoch and monotonic clocks | `std::time`; [`quanta`](https://docs.rs/quanta/); [`coarsetime`](https://docs.rs/coarsetime/) | These can supply time sources, but none establishes the complete Agrona contract: distinct epoch millisecond, epoch microsecond, epoch nanosecond, and arbitrary-origin monotonic nanosecond domains; manually driven cached clocks; or offset-clock sampling behavior. | **Selected port** for behavioral compatibility. **Adopt/evaluate** an existing source only as an internal backend when it preserves that contract. |
 | Snowflake IDs | [`snowflake_me`](https://docs.rs/snowflake_me/); [`snowdon`](https://docs.rs/snowdon/) | Existing crates provide configurable layouts and concurrent generation. `snowflake_me` also exposes clock-regression policies and batch generation. Exact Agrona bit layout and rollback behavior still need differential checks if compatibility matters. | **Adopt** a reviewed crate by default; port only for an unmet exact compatibility contract. |
@@ -97,9 +97,10 @@ No reviewed crate is a drop-in equivalent to Agrona's deliberately small
 duty-cycle protocol. The initial delivery therefore includes the Agent
 protocol, runner, invoker, static composite, lifecycle and error behavior, and
 all Agrona idle strategies. `DynamicCompositeAgent` is omitted because the
-initial use case does not require cross-thread reconfiguration. Actual CPU
-affinity remains an explicit optional facility rather than a claim made from
-thread placement alone.
+initial use case does not require cross-thread reconfiguration. A worker
+initializer provides the Java-equivalent customization point without
+implying that thread creation reserves a core or selecting an affinity
+implementation for applications.
 
 ### Clocks are selected from the Agrona Java contract
 

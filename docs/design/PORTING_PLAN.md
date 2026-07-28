@@ -292,9 +292,10 @@ The reviewed `idle` crate does not provide the complete idle-strategy family.
 
 The Agent protocol, runner, invoker, static composite, and all idle
 strategies are selected for implementation. `DynamicCompositeAgent` is not
-selected. `core_affinity` is not selected as a mandatory dependency.
-Affinity can be added later as an optional deployment facility after its
-dependency review.
+selected. A worker-thread initializer is selected as the idiomatic
+counterpart to Java's `ThreadFactory` extension point. CPU affinity remains
+an application deployment concern; no affinity implementation or dependency
+is selected for the package.
 
 #### G3 — Compatibility
 
@@ -373,7 +374,10 @@ repeated stalls while continuing to wait, but it cannot interrupt or detach
 the running Agent silently. Closing before start calls `on_close` exactly once
 without spawning a thread.
 
-The common loop is:
+The runner can invoke a caller-supplied worker initializer before
+`on_start`. Initialization failure follows the lifecycle startup-error path:
+it is reported, prevents startup and duty cycles, and is followed by one
+cleanup attempt. The common loop is:
 
 1. call `on_start` once;
 2. while no stop is requested, call `do_work`;
@@ -381,9 +385,10 @@ The common loop is:
 4. apply the Agrona error or termination rule; and
 5. call `on_close` exactly once on every completed lifecycle path.
 
-Automatic CPU affinity and scheduling priority are out of scope. Applications
-using busy spin or no-op idling must provide a genuinely available core and
-an acceptable power budget.
+CPU affinity, automatic CPU reservation, and scheduling priority are out of
+scope. Applications can apply their chosen platform integration through the
+worker initializer. Applications using busy spin or no-op idling must still
+provide a genuinely available core and an acceptable power budget.
 
 ##### AgentInvoker
 

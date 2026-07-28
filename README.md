@@ -26,7 +26,7 @@ Utilities Include:
 * Simple Agent framework - Mutable duty cycles with lifecycle callbacks,
   typed recoverable errors, and expected or unexpected termination.
 * Agent execution - Caller-driven invocation and dedicated named OS threads
-  with cooperative shutdown.
+  with startup customization and cooperative shutdown.
 * Agent composition - Static composition of heterogeneous Agents with exact
   Agrona cursor and lifecycle behavior.
 * Idle strategies - Backoff, busy-spin, controllable, no-op, nanosecond

@@ -86,6 +86,20 @@ blocking Agent code.
 Verification intent (informative): stop races, close-before-start,
 spawn-failure injection, join, panic, and blocked-Agent diagnostics.
 
+### AGT-RUN-003 — Worker initialization
+
+A caller-supplied runner initializer MUST execute once on the named worker
+thread before `Agent::on_start`. A recoverable initializer error MUST be
+reported without incrementing the work-error counter, MUST prevent Agent
+startup and duty cycles, and MUST be followed by one cleanup attempt. An
+initializer panic MUST remain fatal and MUST follow the runner's structured
+panic and cleanup behavior. Initialization MUST add no operation to the
+steady-state duty-cycle loop.
+
+Verification intent (informative): worker identity and lifecycle ordering,
+initializer error and panic handling, cross-platform builds, and steady-state
+source/allocation review.
+
 ### AGT-COMP-001 — Static composite lifecycle
 
 `CompositeAgent` MUST reject an empty Agent collection, construct its role
