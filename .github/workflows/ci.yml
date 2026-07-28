@@ -92,3 +92,37 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.85.0
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --workspace --all-targets --all-features
+
+  java-counter-interop:
+    name: Verify Agrona Java counter ABI
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          repository: aeron-io/agrona
+          ref: d4a47c67258f85b39910c4999da346ead655b736
+          path: upstream-agrona
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Regenerate fixture with pinned Agrona Java
+        run: >-
+          python3 scripts/generate_counters_reader_java_fixture.py
+          --agrona-root upstream-agrona
+          --output "${RUNNER_TEMP}/agrona-counter-fixture"
+      - name: Compare generated counter regions
+        run: >-
+          cmp tests/fixtures/counters/metadata.bin
+          "${RUNNER_TEMP}/agrona-counter-fixture/metadata.bin"
+          &&
+          cmp tests/fixtures/counters/values.bin
+          "${RUNNER_TEMP}/agrona-counter-fixture/values.bin"
+      - name: Read regenerated regions with Rust
+        env:
+          AGRONA_COUNTER_FIXTURE_DIR: ${{ runner.temp }}/agrona-counter-fixture
+        run: cargo test --test counters_reader_java_interop

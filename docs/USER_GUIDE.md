@@ -3,7 +3,8 @@
 `agrona-rs` is an unofficial, idiomatic Rust port of selected
 [Agrona](https://github.com/aeron-io/agrona) low-latency components. The
 current crate provides clocks, a synchronous Agent framework, static Agent
-composition, and all seven Agrona idle strategies.
+composition, all seven Agrona idle strategies, and a read-only
+Agrona-compatible counter-buffer reader.
 
 This is not an async runtime or a general actor framework. An Agent is a
 single-owner duty cycle: one thread repeatedly asks it to do a bounded amount
@@ -106,6 +107,66 @@ let _sample_met_threshold = clock.is_within_threshold();
 Use `OffsetEpochNanoClockConfig` and `OffsetEpochNanoClock::with_sources` when
 you need custom sampling thresholds, resampling intervals, or deterministic
 clock sources for a test.
+
+## Counter reader
+
+`CountersReader` reads the exact Agrona/Aeron counter values and metadata ABI
+from two caller-owned byte regions. The values region determines capacity and
+uses 128-byte records; the metadata region uses 512-byte records and must be
+at least four times as long.
+
+The bases must be naturally aligned. Do not assume that `Vec<u8>` satisfies
+that requirement. An owned buffer or read-only memory mapping can retain its
+storage and lend aligned slices to the reader:
+
+```rust
+use agrona::concurrent::status::CountersReader;
+
+#[repr(align(8))]
+struct Aligned<const N: usize>([u8; N]);
+
+let mut metadata = Aligned([0; CountersReader::METADATA_LENGTH]);
+let mut values = Aligned([0; CountersReader::COUNTER_LENGTH]);
+
+metadata.0[CountersReader::STATE_OFFSET
+    ..CountersReader::STATE_OFFSET + size_of::<i32>()]
+    .copy_from_slice(&CountersReader::RECORD_ALLOCATED.to_ne_bytes());
+metadata.0[CountersReader::TYPE_ID_OFFSET
+    ..CountersReader::TYPE_ID_OFFSET + size_of::<i32>()]
+    .copy_from_slice(&7_i32.to_ne_bytes());
+metadata.0[CountersReader::LABEL_LENGTH_OFFSET
+    ..CountersReader::LABEL_LENGTH_OFFSET + size_of::<i32>()]
+    .copy_from_slice(&5_i32.to_ne_bytes());
+metadata.0[CountersReader::LABEL_VALUE_OFFSET
+    ..CountersReader::LABEL_VALUE_OFFSET + 5]
+    .copy_from_slice(b"items");
+values.0[CountersReader::COUNTER_VALUE_OFFSET
+    ..CountersReader::COUNTER_VALUE_OFFSET + size_of::<i64>()]
+    .copy_from_slice(&42_i64.to_ne_bytes());
+
+let reader = CountersReader::new(&metadata.0, &values.0)?;
+assert_eq!(42, reader.counter_value(0)?);
+assert_eq!(7, reader.counter_type_id(0)?);
+assert_eq!(b"items", reader.counter_label(0)?);
+
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+Counter values, registration IDs, record state, and label length use acquire
+loads. Owner IDs, reference IDs, type IDs, and reuse deadlines use the
+weakest Rust atomic ordering corresponding to upstream plain reads. The
+reader uses no mutex and repeated reads allocate nothing.
+
+`counter_key` returns the complete 112-byte key area and `counter_label`
+returns only the validated published label bytes. Both are zero-copy borrowed
+views. Enumeration visits allocated records, skips reclaimed records, and
+stops at the first unused record.
+
+This API neither creates nor owns a memory mapping. The caller must keep both
+regions alive and must follow the documented aliasing and publication rules.
+The crate does not yet provide `CountersManager`, `AtomicCounter`,
+position/status wrappers, an Aeron CnC parser, or application-specific
+counter type IDs and keys.
 
 ## Agents
 
@@ -442,9 +503,10 @@ fails.
 
 ## Current scope
 
-The crate does not currently implement shared-memory buffers, counters,
-queues, ring buffers, or control structures. It also does not provide
-`DynamicCompositeAgent`, CPU affinity, automatic CPU reservation,
+The crate does not currently implement general shared-memory buffers, counter
+allocation or mutation, positions/status wrappers, mappings, container
+formats, queues, ring buffers, or control structures. It also does not
+provide `DynamicCompositeAgent`, CPU affinity, automatic CPU reservation,
 scheduling-priority or NUMA policy, async integration, or `no_std` support.
 
 For exact public types and methods, build and open the API documentation:
