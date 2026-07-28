@@ -1,84 +1,112 @@
-# Counter-reader implementation plan
+# Counter-infrastructure implementation plan
 
 ## Baseline and scope
 
-The delivery baseline is `COUNTER_SPEC.md` at the Agrona Java and Aeron C
-revisions recorded there. The in-scope requirements are `CTR-LAYOUT-001`,
-`CTR-VALID-001`, `CTR-READ-001`, `CTR-META-001`, `CTR-ITER-001`,
-`CTR-LIFE-001`, `CTR-ALLOC-001`, and `CTR-PORT-001`.
+The delivery baseline is `COUNTER_SPEC.md` at the pinned Agrona Java and
+Aeron C revisions recorded there. The existing `COUNTER-READER` gate remains
+closed. This increment implements `CTR-MGR-001` through `CTR-INTEROP-001` and
+keeps the wider `COUNTER-FAMILY` capability partial.
 
-This increment implements only a read-only `CountersReader` over two borrowed
-regions. Manager allocation/free, counter mutation, positions/status
-wrappers, mappings, container formats, and application catalogues are
+Selected components are `CountersManager`, `AtomicCounter`,
+`ReadablePosition`, `Position`, `AtomicLongPosition`,
+`UnsafeBufferPosition`, `StatusIndicatorReader`, `StatusIndicator`, and
+`UnsafeBufferStatusIndicator`. `ConcurrentCountersManager`, mappings,
+container formats, Aeron CnC parsing, and application counter catalogues are
 excluded.
 
 ## Design allocation
 
-`src/concurrent/status/counters_reader.rs` owns the public constants,
-construction, access, enumeration, and search contract.
-`src/concurrent/status/counters_reader_error.rs` owns typed construction and
-access errors. `src/concurrent/aligned_region.rs` is the only library module
-that converts byte addresses to atomic references.
+One public Agrona component is kept in each correspondingly named Rust file
+under `src/concurrent/status`. Rust-only typed errors have their own files.
+`src/concurrent/aligned_region.rs` remains the only module that converts byte
+addresses into atomic references.
 
-The public constructor accepts metadata then values byte slices, matching
-Agrona's constructor order. Both slices remain caller-owned. A later owning
-buffer or mapping can expose its retained regions to this constructor.
+`CountersManager` exclusively borrows both mutable regions, owns a high-water
+mark and reusable-ID list, and is intentionally not thread-shareable. It uses
+the values-derived capacity. Metadata byte mutation requires `&mut self`;
+integral fields shared with readers are accessed atomically.
 
-The values record count is the reader capacity. Scans use that bound even if
-metadata has extra complete records; this is the safe Rust interpretation of
-Agrona's values-derived `maxCounterId`.
+`AtomicCounter`, buffer positions, and status indicators borrow only the
+values region and contain no manager reference. They can be shared for atomic
+value operations. Closing a handle is local and idempotent; freeing its
+registry record is an explicit manager operation. This is the safe Rust
+adaptation of Java's optional manager callback.
+
+## Allocation and lifecycle
+
+Allocation first checks reusable IDs in Agrona free-list order and selects the
+first whose signed deadline is not later than the supplied epoch clock. If no
+ID is reusable, allocation extends the dense high-water mark. Payload fields
+and label bytes are initialized before label length and state are
+release-published.
+
+Freeing release-publishes `RECLAIMED`, clears the complete key, writes the
+wrapping reuse deadline, and queues the ID. Reuse release-resets value and
+registration ID, relaxed-resets owner and reference IDs, then initializes and
+publishes the new metadata record. Invalid and double frees are errors.
 
 ## Ordering proof
 
-The future single-owner manager initializes metadata payload and label bytes,
-release-publishes label length, then release-publishes `ALLOCATED` state.
-Every metadata scan acquire-loads state before type, deadline, key, or label.
-Label access then acquire-loads label length before borrowing the published
-prefix. Either acquire pairs with the corresponding release on x86_64 and
-AArch64; no x86-only store-order assumption is used.
+| Agrona access | Rust ordering |
+|---|---|
+| volatile read/write and multi-writer RMW | `SeqCst` |
+| acquire read | `Acquire` |
+| release/ordered write | `Release` |
+| plain or opaque integral access | `Relaxed` |
 
-Counter value and registration ID pair with upstream release or atomic
-writers through acquire loads. Owner ID, reference ID, type ID, and reuse
-deadline have upstream plain semantics. Rust uses `Relaxed` atomics for these
-fields because a concurrent plain load would be undefined; `Relaxed` adds
-atomicity and modification-order participation but no publication edge.
+Rust has no Java opaque ordering and safe Rust cannot express a concurrent
+racy plain access. `Relaxed` therefore preserves atomicity without adding a
+synchronizes-with edge. Single-writer release, opaque, plain, and propose-max
+updates remain load-then-store operations rather than RMW operations, so their
+upstream lost-update classification is preserved.
 
-All record offsets are naturally aligned because bases are validated to 8
-bytes and record strides and field offsets are multiples of the operand
-alignment.
+Metadata publication is payload bytes followed by release `ALLOCATED` state.
+The string-style allocation and label-mutation paths release-publish label
+length. Agrona's copied-buffer allocation writes label length plainly before
+state publication; `allocate_raw` preserves that distinction with a relaxed
+length store whose visibility is supplied by the later state release.
+Readers acquire state before consuming payload and acquire label length
+before borrowing label bytes. Counter values and registration IDs use
+matching acquire/release operations. These relationships are valid on both
+x86_64 and AArch64 and do not depend on x86 store ordering.
+
+Signed counter arithmetic and reuse deadlines use wrapping operations where
+Java arithmetic wraps.
 
 ## Unsafe invariants
 
-The private aligned-region module requires:
+The checked region module establishes:
 
-1. the borrowed slice address remains stable and valid for its lifetime;
-2. all bytes are initialized;
-3. the base is 8-byte aligned before any atomic conversion;
-4. every integral field offset is bounds-checked and naturally aligned;
-5. same-process concurrent writers use compatible atomic access for integral
-   fields and do not mix racy non-atomic access;
-6. no same-process writer mutates key or label bytes while a borrowed view is
+1. storage is initialized, address-stable, naturally aligned, and valid for
+   the complete borrowed lifetime;
+2. each field access is bounds checked and naturally aligned;
+3. mutable metadata access remains under the manager's unique borrow;
+4. values-region integral access is exclusively atomic while shareable
+   handles exist;
+5. raw views cannot outlive their backing borrow;
+6. key or label bytes are not mutated while a borrowed view to those bytes is
    live; and
-7. the storage owner, not the reader, controls mapping lifetime and external
-   producer coordination.
+7. the caller owns mapping lifetime and external-process coordination.
+
+No raw-pointer arithmetic escapes this module.
 
 ## Delivery coverage
 
-| Requirement | Implementation | Verification |
+| Requirements | Implementation | Verification |
 |---|---|---|
-| `CTR-LAYOUT-001` | constants and offset functions in `counters_reader.rs` | `tests/counters_reader_layout.rs` |
-| `CTR-VALID-001` | checked constructor, ID/label checks, aligned region | `tests/counters_reader_validation.rs` |
-| `CTR-READ-001` | acquire and relaxed integral reads | `tests/counters_reader.rs`, allocation test |
-| `CTR-META-001` | state/label publication reads and borrowed bytes | metadata and publication tests |
-| `CTR-ITER-001` | bounded dense scans and first-match searches | `tests/counters_reader_iteration.rs` |
-| `CTR-LIFE-001` | borrowed lifetime and private unsafe module | API/source inspection and tests |
-| `CTR-ALLOC-001` | allocation-free read and scan implementation | `tests/counters_reader_allocation.rs` |
-| `CTR-PORT-001` | native-atomic guard and existing CI matrix | local MSRV plus post-merge CI |
+| `CTR-LAYOUT-001`–`CTR-ALLOC-001` | `CountersReader` and checked regions | existing reader tests and Java fixture |
+| `CTR-MGR-001`, `CTR-ALLOC-002`, `CTR-REUSE-001`, `CTR-MUTATE-001` | `counters_manager.rs` and typed errors | manager construction, allocation, free/reuse, mutation, and publication tests |
+| `CTR-ATOM-001`, `CTR-ATOM-LIFE-001` | `atomic_counter.rs` | operation, ordering, sharing, lifecycle, wrapping, and allocation tests |
+| `CTR-POS-001` | position traits and `atomic_long_position.rs` | trait, ordering, propose-max, close, and allocation tests |
+| `CTR-BUF-POS-001` | `unsafe_buffer_position.rs` | offset, validation, ordering, and publication tests |
+| `CTR-STATUS-001` | status traits and `unsafe_buffer_status_indicator.rs` | offset, validation, ordering, and publication tests |
+| `CTR-INTEROP-001` | Java fixture generator/validator and Rust interop test | Java-to-Rust and Rust-to-Java byte-region validation |
+| `CTR-PORT-001` | native atomic guard and CI matrix | MSRV plus native x86_64/AArch64 CI |
 
 ## Capability gate
 
-`COUNTER-READER` can close when every reader requirement is implemented and
-validated on the claimed surfaces. `COUNTER-FAMILY` remains partial until
-`CountersManager`, `AtomicCounter`, and applicable position/status types are
-implemented and verified.
-
+The selected requirements closed after local acceptance and native CI
+evidence. `COUNTER-FAMILY` remains partial because
+`ConcurrentCountersManager` is deliberately deferred and later
+manager/position variants have not been reviewed. No RTC container, Aeron CnC
+parser, mapping owner, or application counter catalogue is claimed.

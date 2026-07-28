@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import pathlib
 import shutil
 import subprocess
@@ -19,6 +20,11 @@ def main() -> None:
         help="path to an Agrona repository at the pinned revision",
     )
     parser.add_argument("--output", required=True, type=pathlib.Path)
+    parser.add_argument(
+        "--bidirectional",
+        action="store_true",
+        help="also generate with Rust and validate with Agrona Java",
+    )
     args = parser.parse_args()
 
     repository = pathlib.Path(__file__).resolve().parents[1]
@@ -86,6 +92,30 @@ def main() -> None:
             ],
             check=True,
         )
+        if args.bidirectional:
+            rust_output = args.output / "rust-generated"
+            environment = os.environ.copy()
+            environment["AGRONA_COUNTER_FIXTURE_DIR"] = str(args.output)
+            environment["AGRONA_RUST_COUNTER_FIXTURE_DIR"] = str(rust_output)
+            subprocess.run(
+                ["cargo", "test", "--test", "counters_reader_java_interop"],
+                cwd=repository,
+                env=environment,
+                check=True,
+            )
+            subprocess.run(
+                [
+                    "java",
+                    "--add-opens",
+                    "java.base/jdk.internal.misc=ALL-UNNAMED",
+                    "-cp",
+                    f"{classes}:{jars[0]}",
+                    "CountersReaderFixtureGenerator",
+                    "validate",
+                    str(rust_output),
+                ],
+                check=True,
+            )
 
 
 if __name__ == "__main__":

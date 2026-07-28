@@ -7,8 +7,8 @@
 
 agrona-rs is an unofficial, idiomatic Rust port of selected Agrona
 low-latency building blocks. The Clock family and selected Agent family are
-implemented. A read-only Agrona-compatible counter-buffer reader is selected
-as the first shared-memory increment.
+implemented. An Agrona-compatible counter-buffer reader and single-owner
+counter infrastructure are selected as the first shared-memory increments.
 
 This plan selects two initial component families:
 
@@ -23,7 +23,7 @@ Agrona idle strategies. `DynamicCompositeAgent` is not selected.
 
 Snowflake IDs are not selected for a port. Existing Rust implementations must
 be evaluated first. Shared-memory facilities remain deferred except for the
-selected read-only counter-buffer increment described by `DEC-COUNTER-001`.
+selected counter-buffer infrastructure described by `DEC-COUNTER-001`.
 
 The selected components passed the initial G1-G5 review recorded below and
 their public API reviews are closed. Clock implementation and its closed
@@ -83,9 +83,9 @@ See [`UPSTREAM.md`](../../UPSTREAM.md) for revisions and attribution policy.
 - Automatic CPU reservation, affinity, scheduling-priority, or NUMA policy.
 - A `no_std` implementation in the initial delivery.
 - Porting a Snowflake generator without an unmet compatibility requirement.
-- Counter allocation and mutation, positions, mark files, memory mapping, or
-  other shared-memory protocols beyond the selected read-only counter-buffer
-  ABI.
+- Concurrent counter-registry allocation, mark files, memory mapping, or
+  other shared-memory protocols beyond the selected counter-buffer ABI and
+  single-owner manager.
 - Treating either Julia port as an acceptance oracle.
 
 ## Project-wide constraints
@@ -102,8 +102,9 @@ See [`UPSTREAM.md`](../../UPSTREAM.md) for revisions and attribution policy.
 - Safe Rust is the default. Any `unsafe` block requires a written invariant,
   focused tests, and explicit review.
 - Compatibility level for Clocks and Agents is **behavioral**, not binary.
-  The counter-reader increment deliberately adds a narrow binary-compatibility
-  exception for the Agrona/Aeron counter values and metadata buffer ABI. It
+  The counter-infrastructure increments deliberately add a narrow
+  binary-compatibility exception for the Agrona/Aeron counter values and
+  metadata buffer ABI. They
   does not claim Java object, Java source, container-file, or application
   counter-catalogue compatibility.
 - Benchmarks establish evidence; they do not define correctness and do not
@@ -490,12 +491,13 @@ steady-state duty cycles allocate.
 | I/O and NIO helpers | Omit by default | Most adapt Java APIs rather than define portable behavior. |
 | Code generation and Java agent | Omit | These solve Java-specific specialization and instrumentation problems. |
 
-## Selection record: read-only counter buffers
+## Selection record: counter buffers
 
-### DEC-COUNTER-001 — Select an Agrona-compatible `CountersReader`
+### DEC-COUNTER-001 — Select Agrona-compatible counter infrastructure
 
-The first shared-memory increment is a byte-compatible, read-only view over
-caller-supplied counter metadata and values regions. Agrona Java
+The first shared-memory increments are a byte-compatible reader and
+single-owner manager over caller-supplied counter metadata and values regions,
+plus atomic values, positions, and status indicators. Agrona Java
 `CountersReader`, `CountersManager`, `AtomicCounter`, `AtomicBuffer`, and the
 relevant `UnsafeBuffer` accessors at the recorded revision are normative.
 Aeron C at the recorded revision cross-checks native structure offsets,
@@ -514,11 +516,13 @@ aligned racy non-atomic loads would be undefined in Rust. This adds atomicity
 without adding a synchronizes-with edge. All pointer conversion is confined
 to a private checked region module.
 
-The basic API borrows key and label bytes without allocating. It owns neither
-region, creates no memory mapping, and defines no container header or
-application-specific type IDs. An owning allocation or mapping wrapper can
-later retain its storage and construct the same borrowed reader over its two
-regions without changing the counter ABI.
+The basic API borrows key and label bytes without allocating. The manager
+owns allocation and reclamation state but only borrows the two regions.
+Counter values are shareable, while registry changes retain one owner and use
+no lock. Closing a Rust counter handle is local; explicit manager reclamation
+avoids retaining a non-thread-safe manager reference in a shareable handle.
+The API creates no mapping and defines no container header or
+application-specific type IDs.
 
 The maintained normative contract, implementation design, traceability, and
 evidence are:
@@ -528,17 +532,14 @@ evidence are:
 - [`counter_traceability.toml`](counters/counter_traceability.toml); and
 - [`COUNTER_EVIDENCE.md`](counters/COUNTER_EVIDENCE.md).
 
-The `COUNTER-FAMILY` capability remains partial after this increment.
-`CountersManager` allocation and reclamation, `AtomicCounter` mutation, and
-applicable position and status types require separate implementation and
-evidence.
+The `COUNTER-FAMILY` capability remains partial after this increment because
+`ConcurrentCountersManager` and later counter variants are not selected.
 
 ## Deferred shared-memory scope
 
 The following are explicitly outside the initial delivery:
 
-- counter allocation and mutation, positions, and status wrappers;
-- counters manager and atomic counter operations;
+- concurrent counter-registry allocation;
 - mark files;
 - memory-mapped buffers;
 - cross-process atomic buffers;
@@ -552,8 +553,9 @@ semantics.
 Any later shared-memory selection requires a separate design for its layout,
 alignment, byte order, process lifecycle, stale-resource recovery, supported
 architectures, cross-process atomic guarantees, and Java/Rust fixtures. The
-reader increment resolves only the Agrona/Aeron counter-buffer layout,
-borrowed lifetime, read-side ordering, and validation obligations.
+selected increments resolve the Agrona/Aeron counter-buffer layout, borrowed
+lifetime, single-owner allocation/reclamation, value operations, applicable
+position/status wrappers, ordering, and validation obligations.
 
 ## Implementation phases
 

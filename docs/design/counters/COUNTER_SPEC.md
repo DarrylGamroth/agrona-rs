@@ -1,6 +1,7 @@
-# agrona-rs counter-reader specification
+# agrona-rs counter infrastructure specification
 
-> Maintainer specification. The counter capability is partial.
+> Maintainer specification. The counter capability excludes the explicitly
+> deferred concurrent registry wrapper.
 
 Status: active
 
@@ -13,9 +14,10 @@ Applicable profile: Rust 2024 with Rust 1.85 or later on the maintained
 
 ## Purpose and authority
 
-This document is the normative Rust contract for `DEC-COUNTER-001` in the
-[porting plan](../PORTING_PLAN.md). Agrona Java is the behavioral authority.
-Aeron C is the native layout and ordering cross-check.
+This document is the normative Rust contract for `DEC-COUNTER-001` and its
+selected manager, atomic-counter, position, and status-indicator continuation
+in the [porting plan](../PORTING_PLAN.md). Agrona Java is the behavioral
+authority. Aeron C is the native layout and ordering cross-check.
 
 Uppercase requirement terms use the meanings defined by BCP 14 (RFC 2119 and
 RFC 8174).
@@ -120,12 +122,144 @@ before validating cross-architecture evidence.
 Verification intent: MSRV, stable, three-OS, x86_64, and AArch64 CI plus
 source inspection.
 
+### CTR-MGR-001 — Single-owner manager construction and capacity
+
+`CountersManager` MUST borrow checked, aligned mutable metadata and values
+regions; use the values-derived capacity and dense signed counter-ID space;
+report capacity and currently allocatable slots; retain a caller-supplied
+epoch-millisecond clock and signed reuse timeout; own its high-water
+mark and free list without a mutex or reader-writer lock; and reject malformed
+regions before mutation.
+
+Verification intent: empty, one-record, full-capacity, malformed, misaligned,
+capacity, and available-count tests plus source inspection.
+
+### CTR-ALLOC-002 — Counter allocation and publication
+
+The single-owner manager MUST allocate reusable eligible IDs before extending
+the dense high-water mark; reject allocation when full; initialize type,
+deadline, optional key, and truncated label before release-publishing
+`ALLOCATED`; preserve zero-filled unused key bytes; return an acquired ID to
+the free list if key initialization fails; and leave counter value and
+identity defaults compatible with Agrona.
+
+Verification intent: sequential allocation, exhaustion, label/key bounds,
+initializer failure and recovery, exact metadata bytes, first-UNUSED
+enumeration, and Java/Rust interoperability tests.
+
+### CTR-REUSE-001 — Reclamation, cooldown, and ABA identity reset
+
+Free and reuse MUST reject invalid or non-allocated IDs; release-publish
+`RECLAIMED` before clearing all 112 key bytes; store the wrapping
+epoch-millisecond reuse deadline; withhold the ID until `now >= deadline`;
+and, before reallocation, release-reset value and registration ID while
+relaxed-resetting owner and reference IDs so registration identity can
+distinguish reuse.
+
+Verification intent: double-free, invalid ID, key clearing, timeout boundary,
+available count, wrapping deadline, reuse order, and all value/identity reset
+tests.
+
+### CTR-MUTATE-001 — Manager metadata and identity mutation
+
+Manager mutation MUST release-store counter value and registration ID;
+relaxed-store owner and reference IDs; reject oversized replacement keys;
+copy accepted key prefixes without modifying the remainder; truncate labels
+to 380 bytes; acquire the published label length before append; and
+release-publish replacement or appended label length after writing label
+bytes.
+
+Verification intent: direct reader observation, key boundary and remainder,
+label truncation and append-at-capacity, and release/acquire publication
+tests.
+
+### CTR-ATOM-001 — AtomicCounter operations and ordering
+
+`AtomicCounter` MUST validate its values-region record; use sequentially
+consistent loads, stores, fetch-add, swap, and compare-exchange for upstream
+volatile or multi-writer operations; use acquire loads and release stores for
+the corresponding ordered operations; adapt upstream plain and opaque
+operations to relaxed atomics; retain the upstream single-writer
+load-then-store behavior for release, opaque, plain, and propose-max
+operations; use signed wrapping arithmetic; and allocate zero bytes on every
+steady-state value operation.
+
+Verification intent: every operation and alias, wrapping boundaries,
+multi-writer exact-count stress, release/acquire publication, lost-update
+classification by source review, and counting-allocator tests.
+
+### CTR-ATOM-LIFE-001 — Rust counter-handle lifecycle
+
+Counter handles MUST borrow caller-owned values storage for their lifetime,
+remain safe to share for atomic value operations, track idempotent local close
+state atomically, and require explicit `CountersManager::free` for registry
+reclamation rather than retaining a non-thread-safe manager reference; direct
+writable construction requires an exclusive mutable region, while additional
+shareable handles come from the manager's checked atomic view.
+
+Verification intent: compile-time sharing, close idempotence, storage
+lifetime, stale-handle/reuse behavior, and explicit-free documentation tests.
+
+### CTR-POS-001 — Process-local position contract
+
+`ReadablePosition`, `Position`, and `AtomicLongPosition` MUST expose Agrona's
+ID, close, read, write, and propose-max behavior; map volatile operations to
+sequential consistency, acquire/release operations directly, and
+plain/opaque operations to relaxed atomics; keep propose-max single-writer;
+and use zero-allocation steady-state operations.
+
+Verification intent: trait use, constructor defaults, every ordering family,
+propose-max boundaries, close state, cross-thread publication, and allocation
+tests.
+
+### CTR-BUF-POS-001 — Counter-buffer position contract
+
+`UnsafeBufferPosition` MUST address the counter value at the exact
+128-byte-stride ABI offset; validate region alignment, boundaries, and ID;
+implement all position ordering and propose-max behavior through compatible
+atomics; track local close state; and leave manager reclamation explicit.
+Direct writable construction takes exclusive mutable storage; wrapping a
+manager-produced checked counter handle is the safe shared-region path.
+
+Verification intent: multiple IDs and offsets, invalid construction, every
+ordering family, release/acquire publication, close behavior, and Java-layout
+fixture tests.
+
+### CTR-STATUS-001 — Counter-buffer status indicator contract
+
+`StatusIndicatorReader`, `StatusIndicator`, and
+`UnsafeBufferStatusIndicator` MUST address the counter value at the exact ABI
+offset; validate construction; provide volatile, acquire, and opaque reads
+and volatile, release, ordered-alias, and opaque writes using the Rust
+ordering adaptations defined above; and allocate zero bytes in steady state.
+Its writable construction follows the same exclusive-region or
+manager-produced-handle rule as buffer positions.
+
+Verification intent: trait use, multiple IDs, invalid construction, every
+ordering family, cross-thread publication, and allocation tests.
+
+### CTR-INTEROP-001 — Bidirectional Java region interoperability
+
+The maintained interoperability procedure MUST generate allocated,
+reclaimed, reused, maximum-key, and maximum-label records with the pinned
+Agrona Java manager for Rust validation and generate equivalent regions with
+the Rust manager for validation by the pinned Java reader on a matching
+native-endian platform.
+
+Verification intent: Java 17 CI builds pinned Agrona, performs both
+producer/consumer directions, and byte-checks stable Java-produced fixtures.
+
 ## Claim limits
 
 Conformance claims byte compatibility only with the two Agrona/Aeron counter
 regions on a matching native-endian platform and compatible atomic target.
 It does not claim Java object or source compatibility, an Aeron CnC or other
-container format, mapping creation, a cross-process allocator, manager
-mutation, `AtomicCounter`, position/status wrappers, application type IDs,
-type-specific key encoders, RTC counters, or cross-process correctness from a
+container format, mapping creation, a cross-process allocator,
+`ConcurrentCountersManager`, application type IDs, type-specific key
+encoders, RTC counters, or cross-process correctness from a
 single-architecture test.
+
+Automatic free-on-close through a retained manager reference is intentionally
+adapted to explicit manager reclamation. This keeps atomic counter handles
+thread-shareable without making the single-owner manager registry
+concurrently mutable or adding a lock.

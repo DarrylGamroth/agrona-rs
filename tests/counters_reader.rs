@@ -82,17 +82,14 @@ fn reads_state_value_identities_and_complete_metadata() {
 }
 
 #[test]
-fn exposes_the_original_borrowed_regions() {
+fn borrowed_key_view_points_into_the_original_metadata_region() {
     let metadata = AlignedBuffer::new(CountersReader::METADATA_LENGTH);
     let values = AlignedBuffer::new(CountersReader::COUNTER_LENGTH);
     let reader = CountersReader::new(metadata.as_bytes(), values.as_bytes()).unwrap();
 
+    let expected = metadata.as_bytes()[CountersReader::KEY_OFFSET..].as_ptr();
     assert!(std::ptr::eq(
-        metadata.as_bytes().as_ptr(),
-        reader.metadata_region().as_ptr()
-    ));
-    assert!(std::ptr::eq(
-        values.as_bytes().as_ptr(),
-        reader.values_region().as_ptr()
+        expected,
+        reader.counter_key(0).unwrap().as_ptr()
     ));
 }

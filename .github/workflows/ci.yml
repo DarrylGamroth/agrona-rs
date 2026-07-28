@@ -115,6 +115,7 @@ jobs:
           python3 scripts/generate_counters_reader_java_fixture.py
           --agrona-root upstream-agrona
           --output "${RUNNER_TEMP}/agrona-counter-fixture"
+          --bidirectional
       - name: Compare generated counter regions
         run: >-
           cmp tests/fixtures/counters/metadata.bin
@@ -122,7 +123,3 @@ jobs:
           &&
           cmp tests/fixtures/counters/values.bin
           "${RUNNER_TEMP}/agrona-counter-fixture/values.bin"
-      - name: Read regenerated regions with Rust
-        env:
-          AGRONA_COUNTER_FIXTURE_DIR: ${{ runner.temp }}/agrona-counter-fixture
-        run: cargo test --test counters_reader_java_interop
