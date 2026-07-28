@@ -18,7 +18,7 @@ tag so that builds are reproducible:
 
 ```toml
 [dependencies]
-agrona = { git = "https://github.com/DarrylGamroth/agrona-rs", tag = "v0.1.1" }
+agrona = { git = "https://github.com/DarrylGamroth/agrona-rs", tag = "v0.2.0" }
 ```
 
 Rust 1.85 or newer is required. The crate requires native 64-bit atomics.

@@ -76,7 +76,7 @@ crates.io or docs.rs. Depend on a release tag directly from GitHub:
 
 ```toml
 [dependencies]
-agrona = { git = "https://github.com/DarrylGamroth/agrona-rs", tag = "v0.1.1" }
+agrona = { git = "https://github.com/DarrylGamroth/agrona-rs", tag = "v0.2.0" }
 ```
 
 Build

@@ -12,16 +12,16 @@
   `bc3e2ee471aedaa62c879f5dac01d191aa887bbe`.
 - Mutable implementation commit:
   `e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59`.
+- Delivered `main` revision:
+  `016cd2c96f7187dac744a31a82c17604b7ae018b`.
 - Local environment: Linux `6.12.57+deb13-amd64`, x86_64, rustc/cargo
   1.93.0, cargo 1.85.0, and OpenJDK 21.0.11 compiling the fixture with
   `javac --release 17`.
 
-The previously merged `COUNTER-READER` gate was verified by
-[GitHub Actions run 30387109112](https://github.com/DarrylGamroth/agrona-rs/actions/runs/30387109112)
-on native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64. The new
-mutable requirements were verified by
-[GitHub Actions run 30391528058](https://github.com/DarrylGamroth/agrona-rs/actions/runs/30391528058)
-on the same native matrix, including the bidirectional Java ABI job.
+The delivered reader and mutable counter family were verified together by
+[GitHub Actions run 30394389866](https://github.com/DarrylGamroth/agrona-rs/actions/runs/30394389866)
+on native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64, including
+the bidirectional Java ABI job.
 
 ## Requirement evidence
 
@@ -62,7 +62,7 @@ The regenerated checked-in Java fixtures have these hashes:
 - `values.bin`:
   `5db49348d5af29b4a0bd04a004f699107bf3bd8def1c964e587826ddf5576410`
 
-The complete bidirectional command passed locally and in run 30391528058.
+The complete bidirectional command passed locally and in run 30394389866.
 The CI job uses Temurin Java 17, regenerates and byte-compares the stable Java
 fixtures, runs the Rust consumer/producer tests, then runs the Java validator.
 This establishes region ABI interoperability on a matching native-endian
@@ -155,7 +155,7 @@ Strict traceability checker: 18 requirements, 0 errors, 0 warnings
 PASS
 ```
 
-GitHub Actions run 30391528058 passed:
+GitHub Actions run 30394389866 passed at delivered revision `016cd2c`:
 
 ```text
 Format, lint, and document
