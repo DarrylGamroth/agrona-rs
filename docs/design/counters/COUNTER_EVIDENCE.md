@@ -10,8 +10,8 @@
   `e44cd27a3b357c27ad37f6107a957f46d95552ac`.
 - Reader baseline commit:
   `bc3e2ee471aedaa62c879f5dac01d191aa887bbe`.
-- Mutable implementation worktree: `agent/counter-family`, based on
-  `ea60da1b0ee9b1d6bcf7bc68acd18abac98c545a`.
+- Mutable implementation commit:
+  `e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59`.
 - Local environment: Linux `6.12.57+deb13-amd64`, x86_64, rustc/cargo
   1.93.0, cargo 1.85.0, and OpenJDK 21.0.11 compiling the fixture with
   `javac --release 17`.
@@ -19,25 +19,26 @@
 The previously merged `COUNTER-READER` gate was verified by
 [GitHub Actions run 30387109112](https://github.com/DarrylGamroth/agrona-rs/actions/runs/30387109112)
 on native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64. The new
-mutable requirements have complete local x86_64 evidence but remain partial
-until post-merge CI exercises the maintained native matrix.
+mutable requirements were verified by
+[GitHub Actions run 30391528058](https://github.com/DarrylGamroth/agrona-rs/actions/runs/30391528058)
+on the same native matrix, including the bidirectional Java ABI job.
 
 ## Requirement evidence
 
-| Requirement | Implementation | Local evidence | State |
+| Requirement | Implementation | Verification evidence | State |
 | --- | --- | --- | --- |
 | `CTR-LAYOUT-001`–`CTR-ALLOC-001` | `CountersReader` and checked aligned region | Existing reader tests, allocation test, Java fixture, and prior native CI | Validated |
-| `CTR-MGR-001` | Single-owner `CountersManager` with checked mutable regions, values-derived capacity, free list, clock, and no lock | Empty/malformed/misaligned, capacity, availability, and exhaustion tests | Implemented; local validated |
-| `CTR-ALLOC-002` | Dense high-water allocation, eligible reuse first, key/label initialization, rollback, release state publication | Allocation, failure recovery, exact metadata, truncation, reader publication, and Java tests | Implemented; local validated |
-| `CTR-REUSE-001` | Release reclaim, key clear, wrapping deadline, cooldown, value/identity resets | Invalid/double free, deadline boundary/wrap, reuse ordering, stale handle, and bidirectional interop tests | Implemented; local validated |
-| `CTR-MUTATE-001` | Ordered value/identity mutation plus bounded key/label updates | Mutation, remainder preservation, truncation, append, malformed length, and reader-observation tests | Implemented; local validated |
-| `CTR-ATOM-001` | Complete `AtomicCounter` ordering and operation families | Every operation/alias, wrapping, four-writer exact-count, publication, and zero-allocation tests | Implemented; local validated |
-| `CTR-ATOM-LIFE-001` | Borrowed shareable handle, atomic local close, explicit manager free | Scoped-thread sharing, idempotent close, explicit free, reuse, stale-handle, and guide tests | Implemented; local validated |
-| `CTR-POS-001` | `ReadablePosition`, `Position`, and `AtomicLongPosition` | Trait, constructor, ordering, propose-max, close, and zero-allocation tests | Implemented; local validated |
-| `CTR-BUF-POS-001` | `UnsafeBufferPosition` over checked counter handles | Multiple ID/stride, invalid region/ID, ordering, close, and allocation tests | Implemented; local validated |
-| `CTR-STATUS-001` | Status traits and `UnsafeBufferStatusIndicator` | Multiple ID/stride, validation, ordering, publication, and allocation tests | Implemented; local validated |
-| `CTR-INTEROP-001` | Java generator/validator, Rust producer/consumer, and CI job | Pinned Java-to-Rust and Rust-to-Java procedure passed locally | Implemented; local validated |
-| `CTR-PORT-001` | Rust 2024, Rust 1.85, native-atomic guard, CI matrix | Local MSRV acceptance; prior reader matrix; mutable post-merge matrix pending | Partial |
+| `CTR-MGR-001` | Single-owner `CountersManager` with checked mutable regions, values-derived capacity, free list, clock, and no lock | Empty/malformed/misaligned, capacity, availability, exhaustion, and native matrix tests | Validated |
+| `CTR-ALLOC-002` | Dense high-water allocation, eligible reuse first, key/label initialization, rollback, release state publication | Allocation, failure recovery, exact metadata, truncation, publication, Java, and native tests | Validated |
+| `CTR-REUSE-001` | Release reclaim, key clear, wrapping deadline, cooldown, value/identity resets | Invalid/double free, deadline boundary/wrap, reuse ordering, stale handle, interop, and native tests | Validated |
+| `CTR-MUTATE-001` | Ordered value/identity mutation plus bounded key/label updates | Mutation, remainder preservation, truncation, append, malformed length, reader, and native tests | Validated |
+| `CTR-ATOM-001` | Complete `AtomicCounter` ordering and operation families | Every operation/alias, wrapping, four-writer exact-count, publication, allocation, and native tests | Validated |
+| `CTR-ATOM-LIFE-001` | Borrowed shareable handle, atomic local close, explicit manager free | Sharing, idempotent close, explicit free, reuse, stale-handle, guide, and native tests | Validated |
+| `CTR-POS-001` | `ReadablePosition`, `Position`, and `AtomicLongPosition` | Trait, constructor, ordering, propose-max, close, publication, allocation, and native tests | Validated |
+| `CTR-BUF-POS-001` | `UnsafeBufferPosition` over checked counter handles | Multiple ID/stride, validation, ordering, close, publication, allocation, and native tests | Validated |
+| `CTR-STATUS-001` | Status traits and `UnsafeBufferStatusIndicator` | Multiple ID/stride, validation, ordering, publication, allocation, and native tests | Validated |
+| `CTR-INTEROP-001` | Java generator/validator, Rust producer/consumer, and CI job | Pinned Java-to-Rust and Rust-to-Java procedure passed locally and in CI | Validated |
+| `CTR-PORT-001` | Rust 2024, Rust 1.85, native-atomic guard, CI matrix | MSRV plus stable native Linux/macOS/Windows x86_64/AArch64 CI | Validated |
 
 ## Java interoperability
 
@@ -61,11 +62,11 @@ The regenerated checked-in Java fixtures have these hashes:
 - `values.bin`:
   `5db49348d5af29b4a0bd04a004f699107bf3bd8def1c964e587826ddf5576410`
 
-The complete bidirectional command passed locally. The CI job uses Temurin
-Java 17, regenerates and byte-compares the stable Java fixtures, runs the Rust
-consumer/producer tests, then runs the Java validator. This establishes
-region ABI interoperability on a matching native-endian platform. It does
-not establish live cross-process mapped-memory correctness.
+The complete bidirectional command passed locally and in run 30391528058.
+The CI job uses Temurin Java 17, regenerates and byte-compares the stable Java
+fixtures, runs the Rust consumer/producer tests, then runs the Java validator.
+This establishes region ABI interoperability on a matching native-endian
+platform. It does not establish live cross-process mapped-memory correctness.
 
 ## Unsafe invariants
 
@@ -116,9 +117,9 @@ an RMW, preserving their lost-update behavior. Signed arithmetic uses
 wrapping operations.
 
 These relationships use the Rust memory model and native 64-bit atomics and
-do not depend on x86 store ordering. Local x86_64 publication and concurrency
-tests pass. The ledger does not promote new cross-architecture claims until
-the same tests pass natively on AArch64 CI.
+do not depend on x86 store ordering. Publication and concurrency tests passed
+locally on x86_64 and in CI on native Linux x86_64/AArch64, macOS AArch64,
+and Windows x86_64.
 
 ## Local verification results
 
@@ -151,6 +152,34 @@ Pinned Agrona Java-to-Rust and Rust-to-Java interop
 PASS
 
 Strict traceability checker: 18 requirements, 0 errors, 0 warnings
+PASS
+```
+
+GitHub Actions run 30391528058 passed:
+
+```text
+Format, lint, and document
+PASS
+
+Measure and upload coverage
+PASS
+
+Verify Agrona Java counter ABI
+PASS
+
+Test stable on Linux x86_64
+PASS
+
+Test stable on Linux AArch64
+PASS
+
+Test stable on macOS AArch64
+PASS
+
+Test stable on Windows x86_64
+PASS
+
+Check Rust 1.85 MSRV
 PASS
 ```
 

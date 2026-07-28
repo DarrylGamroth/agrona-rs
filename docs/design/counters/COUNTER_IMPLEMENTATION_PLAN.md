@@ -105,9 +105,8 @@ No raw-pointer arithmetic escapes this module.
 
 ## Capability gate
 
-This increment can close its selected requirements after local acceptance and
-post-merge native CI evidence. `COUNTER-FAMILY` remains partial until
-`ConcurrentCountersManager` is separately selected or explicitly excluded
-from the supported family and until any later manager/position variants are
-reviewed. No RTC container, Aeron CnC parser, mapping owner, or application
-counter catalogue is claimed.
+The selected requirements closed after local acceptance and native CI
+evidence. `COUNTER-FAMILY` remains partial because
+`ConcurrentCountersManager` is deliberately deferred and later
+manager/position variants have not been reviewed. No RTC container, Aeron CnC
+parser, mapping owner, or application counter catalogue is claimed.
