@@ -24,8 +24,8 @@ evidence_links = [
 ]
 verified_obligations = ["constants", "values-layout", "metadata-layout", "record-states", "capacity", "offsets"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
-verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
-verified_environment = "GitHub Actions 30387109112: native Linux x86_64/AArch64, macOS AArch64, Windows x86_64, and pinned Agrona Java 17 interop"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native Linux x86_64/AArch64, macOS AArch64, Windows x86_64, and pinned Agrona Java 17 interop"
 remaining_gaps = []
 
 [[requirements]]
@@ -50,8 +50,8 @@ evidence_links = [
 ]
 verified_obligations = ["record-boundaries", "metadata-ratio", "base-alignment", "capacity-range", "counter-id", "label-length"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
-verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
-verified_environment = "GitHub Actions 30387109112: native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
 remaining_gaps = []
 
 [[requirements]]
@@ -76,8 +76,8 @@ evidence_links = [
 ]
 verified_obligations = ["value-acquire", "registration-acquire", "owner-relaxed-adaptation", "reference-relaxed-adaptation", "lock-free-native", "zero-allocation"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
-verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
-verified_environment = "GitHub Actions 30387109112: native Linux x86_64/AArch64, macOS AArch64, Windows x86_64, and zero-allocation test"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native Linux x86_64/AArch64, macOS AArch64, Windows x86_64, and zero-allocation test"
 remaining_gaps = []
 
 [[requirements]]
@@ -103,8 +103,8 @@ evidence_links = [
 ]
 verified_obligations = ["state-acquire", "type", "reuse-deadline", "key-view", "label-length-acquire", "label-view", "publication-stress"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
-verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
-verified_environment = "GitHub Actions 30387109112: 4096-record publication stress on native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: 4096-record publication stress on native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
 remaining_gaps = []
 
 [[requirements]]
@@ -125,8 +125,8 @@ evidence_links = [
 ]
 verified_obligations = ["allocated", "skip-reclaimed", "first-unused", "capacity-bound", "counter-enumeration", "metadata-enumeration", "registration-search", "type-registration-search"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
-verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
-verified_environment = "GitHub Actions 30387109112: native maintained-platform matrix and pinned Agrona Java 17 fixture"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native maintained-platform matrix and pinned Agrona Java 17 fixture"
 remaining_gaps = []
 
 [[requirements]]
@@ -150,8 +150,8 @@ evidence_links = [
 ]
 verified_obligations = ["borrowed-lifetime", "no-mutable-reference", "unsafe-confinement", "alignment-invariant", "initialization-invariant", "aliasing-invariant", "atomic-access-invariant"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
-verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
-verified_environment = "GitHub Actions 30387109112: native maintained-platform matrix; local complete unsafe source review"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native maintained-platform matrix; local complete unsafe source review"
 remaining_gaps = []
 
 [[requirements]]
@@ -171,8 +171,8 @@ evidence_links = [
 ]
 verified_obligations = ["value", "identity", "metadata", "borrowed-bytes", "enumeration", "search"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
-verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
-verified_environment = "GitHub Actions 30387109112: counting global allocator on native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: counting global allocator on native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
 remaining_gaps = []
 
 [[requirements]]
@@ -197,8 +197,8 @@ evidence_links = [
 ]
 verified_obligations = ["rust-1.85", "rust-2024", "native-atomic64", "three-os-ci", "x86_64-ci", "aarch64-ci"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
-verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
-verified_environment = "GitHub Actions 30387109112: Rust 1.85 MSRV plus stable native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: Rust 1.85 MSRV plus stable native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
 remaining_gaps = []
 
 [[requirements]]
@@ -219,8 +219,8 @@ evidence_state = "validated"
 evidence_links = ["tests/counters_manager.rs", "docs/design/counters/COUNTER_EVIDENCE.md"]
 verified_obligations = ["checked-regions", "single-owner", "capacity", "available", "clock", "reuse-timeout", "no-lock"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
-verified_revision = "e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59"
-verified_environment = "GitHub Actions 30391528058: native maintained-platform matrix"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native maintained-platform matrix"
 remaining_gaps = []
 
 [[requirements]]
@@ -245,8 +245,8 @@ evidence_links = [
 ]
 verified_obligations = ["reuse-first", "high-water-mark", "full", "metadata-initialization", "key", "label", "rollback", "state-release"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
-verified_revision = "e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59"
-verified_environment = "GitHub Actions 30391528058: native Linux x86_64/AArch64, macOS AArch64, Windows x86_64, and pinned Agrona Java interop"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native Linux x86_64/AArch64, macOS AArch64, Windows x86_64, and pinned Agrona Java interop"
 remaining_gaps = []
 
 [[requirements]]
@@ -268,8 +268,8 @@ evidence_links = [
 ]
 verified_obligations = ["invalid-free", "double-free", "reclaimed-release", "key-clear", "deadline", "cooldown", "identity-reset", "value-reset"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
-verified_revision = "e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59"
-verified_environment = "GitHub Actions 30391528058: native maintained-platform matrix and pinned Agrona Java interop"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native maintained-platform matrix and pinned Agrona Java interop"
 remaining_gaps = []
 
 [[requirements]]
@@ -286,8 +286,8 @@ evidence_state = "validated"
 evidence_links = ["tests/counters_manager.rs", "docs/design/counters/COUNTER_EVIDENCE.md"]
 verified_obligations = ["value-release", "registration-release", "owner-relaxed", "reference-relaxed", "key-bound", "label-truncate", "label-append", "label-release"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
-verified_revision = "e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59"
-verified_environment = "GitHub Actions 30391528058: native maintained-platform matrix"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native maintained-platform matrix"
 remaining_gaps = []
 
 [[requirements]]
@@ -311,8 +311,8 @@ evidence_links = [
 ]
 verified_obligations = ["construction", "seqcst", "acquire-release", "plain-relaxed", "opaque-relaxed", "multi-writer-rmw", "single-writer-update", "wrapping", "zero-allocation"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
-verified_revision = "e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59"
-verified_environment = "GitHub Actions 30391528058: native operation, concurrency, publication, and allocation matrix"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native operation, concurrency, publication, and allocation matrix"
 remaining_gaps = []
 
 [[requirements]]
@@ -333,8 +333,8 @@ evidence_state = "validated"
 evidence_links = ["tests/atomic_counter.rs", "docs/design/counters/COUNTER_EVIDENCE.md"]
 verified_obligations = ["borrowed-storage", "send-sync", "close", "explicit-free", "stale-handle", "documentation"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows"]
-verified_revision = "e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59"
-verified_environment = "GitHub Actions 30391528058: native maintained-platform lifecycle and sharing matrix"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native maintained-platform lifecycle and sharing matrix"
 remaining_gaps = []
 
 [[requirements]]
@@ -359,8 +359,8 @@ evidence_links = [
 ]
 verified_obligations = ["traits", "constructors", "ordering", "propose-max", "close", "publication", "zero-allocation"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
-verified_revision = "e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59"
-verified_environment = "GitHub Actions 30391528058: native contract, publication, and allocation matrix"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native contract, publication, and allocation matrix"
 remaining_gaps = []
 
 [[requirements]]
@@ -384,8 +384,8 @@ evidence_links = [
 ]
 verified_obligations = ["abi-offset", "validation", "ordering", "propose-max", "close", "explicit-free", "publication"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
-verified_revision = "e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59"
-verified_environment = "GitHub Actions 30391528058: native offset, ordering, lifecycle, publication, and allocation matrix"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native offset, ordering, lifecycle, publication, and allocation matrix"
 remaining_gaps = []
 
 [[requirements]]
@@ -410,8 +410,8 @@ evidence_links = [
 ]
 verified_obligations = ["traits", "abi-offset", "validation", "ordering", "publication", "zero-allocation"]
 verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
-verified_revision = "e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59"
-verified_environment = "GitHub Actions 30391528058: native offset, ordering, publication, and allocation matrix"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: native offset, ordering, publication, and allocation matrix"
 remaining_gaps = []
 
 [[requirements]]
@@ -435,8 +435,8 @@ evidence_links = [
 ]
 verified_obligations = ["java-producer", "rust-reader", "rust-producer", "java-reader", "allocated", "reclaimed", "reused", "max-key-label"]
 verified_surfaces = ["std-linux"]
-verified_revision = "e64f39ff274d5e50a5f71a94f4fc02d4fc54ad59"
-verified_environment = "GitHub Actions 30391528058: pinned Agrona Java 17 bidirectional interop on Linux"
+verified_revision = "016cd2c96f7187dac744a31a82c17604b7ae018b"
+verified_environment = "GitHub Actions 30394389866: pinned Agrona Java 17 bidirectional interop on Linux"
 remaining_gaps = []
 
 [[gates]]
