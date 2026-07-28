@@ -8,31 +8,32 @@
   `d4a47c67258f85b39910c4999da346ead655b736`.
 - Aeron C layout and ordering comparison:
   `e44cd27a3b357c27ad37f6107a957f46d95552ac`.
-- Candidate implementation: working tree based on
-  `fa5a827d2232346f05f300f01f0dacc492b6f008`.
+- Verified implementation:
+  `bc3e2ee471aedaa62c879f5dac01d191aa887bbe`.
 - Local environment: Debian Linux
   `6.12.57+deb13-amd64`, x86_64, rustc 1.93.0, cargo 1.85.0, and
   OpenJDK 21.0.11.
-- GitHub Actions evidence for the delivered revision: pending.
+- GitHub Actions:
+  [run 30387109112](https://github.com/DarrylGamroth/agrona-rs/actions/runs/30387109112),
+  successful after rerunning two jobs affected by the pre-existing
+  `agent_allocation` test's process-global allocation-counter race.
 
 ## Requirement evidence
 
 | Requirement | Implementation | Local evidence | State |
 | --- | --- | --- | --- |
-| `CTR-LAYOUT-001` | `counters_reader.rs` exact constants and offsets | Layout tests and pinned-Java fixture | Partial pending maintained-platform CI |
-| `CTR-VALID-001` | `AlignedRegion`, constructor, checked offsets, and typed errors | Boundary, alignment, ID, and malformed-label tests | Partial pending maintained-platform CI |
-| `CTR-READ-001` | Acquire value/registration reads; relaxed owner/reference reads | Direct-read, Java-interoperability, and zero-allocation tests | Partial pending native AArch64 CI |
-| `CTR-META-001` | Acquire state/label-length publication; borrowed key/label | Metadata and 4,096-record publication stress tests | Partial pending native AArch64 CI |
-| `CTR-ITER-001` | Dense scans and first-match searches | Allocated/reclaimed/unused, first-UNUSED, and Java-fixture tests | Partial pending maintained-platform CI |
-| `CTR-LIFE-001` | Borrowed reader plus confined checked unsafe region | Lifetime API, misalignment tests, and unsafe review below | Partial pending delivered-revision CI |
-| `CTR-ALLOC-001` | Borrowed byte views and non-allocating scans | Counting-global-allocator test across 1,000 repetitions | Partial pending maintained-platform CI |
-| `CTR-PORT-001` | Rust 2024, MSRV 1.85, native-atomic guard, existing native CI matrix | Local MSRV check and x86_64 verification | Partial pending native AArch64/macOS/Windows CI |
+| `CTR-LAYOUT-001` | `counters_reader.rs` exact constants and offsets | Layout tests and pinned-Java fixture | Validated |
+| `CTR-VALID-001` | `AlignedRegion`, constructor, checked offsets, and typed errors | Boundary, alignment, ID, and malformed-label tests | Validated |
+| `CTR-READ-001` | Acquire value/registration reads; relaxed owner/reference reads | Direct-read, Java-interoperability, zero-allocation, and native matrix tests | Validated |
+| `CTR-META-001` | Acquire state/label-length publication; borrowed key/label | Metadata and 4,096-record publication stress tests on x86_64 and AArch64 | Validated |
+| `CTR-ITER-001` | Dense scans and first-match searches | Allocated/reclaimed/unused, first-UNUSED, and Java-fixture tests | Validated |
+| `CTR-LIFE-001` | Borrowed reader plus confined checked unsafe region | Lifetime API, misalignment tests, unsafe review, and native matrix | Validated |
+| `CTR-ALLOC-001` | Borrowed byte views and non-allocating scans | Counting-global-allocator test across 1,000 repetitions | Validated |
+| `CTR-PORT-001` | Rust 2024, MSRV 1.85, native-atomic guard, existing native CI matrix | Rust 1.85 and native Linux/macOS/Windows x86_64/AArch64 CI | Validated |
 
-Both `COUNTER-READER` and `COUNTER-FAMILY` remain partial. The reader gate can
-be promoted only after the exact delivered revision passes its native CI
-matrix. The family gate remains partial after that promotion because manager
-allocation/reclamation, `AtomicCounter`, and applicable position/status types
-are absent.
+`COUNTER-READER` is complete for this specified read-only increment.
+`COUNTER-FAMILY` remains partial because manager allocation/reclamation,
+`AtomicCounter`, and applicable position/status types are absent.
 
 ## Java interoperability evidence
 
@@ -52,9 +53,10 @@ The generated native-endian files have these local hashes:
 `counters_reader_java_interop.rs` reads those Java-produced bytes through the
 public Rust API and verifies every allocated field, the maximum key and label,
 the reclaimed and unused states, enumeration, and both search forms. The
-`java-counter-interop` CI job regenerates the files with Temurin Java 17,
-byte-compares them with the checked-in fixtures, and runs the Rust
-interoperability test against the regenerated directory.
+`java-counter-interop` CI job regenerated the files with Temurin Java 17,
+byte-compared them with the checked-in fixtures, and ran the Rust
+interoperability test against the regenerated directory successfully in run
+30387109112.
 
 This proves counter-region ABI interoperability on a matching native-endian
 platform. It does not by itself prove live cross-process mapped-memory
@@ -105,8 +107,8 @@ atomics, so these accesses do not fall back to locks on supported targets.
 The publication stress test initializes each record's numeric fields, key,
 and label; release-publishes label length, value, registration ID, and state;
 then verifies the complete record after the reader observes allocated state.
-It passed locally on x86_64. Native AArch64 execution is intentionally pending
-CI evidence.
+It passed locally on x86_64 and in CI on native Linux x86_64, Linux AArch64,
+macOS AArch64, and Windows x86_64.
 
 ## Local verification results
 
@@ -147,6 +149,40 @@ AlignedRegion unsafe substrate: 100.00% lines
 git diff --check
 PASS
 ```
+
+GitHub Actions run 30387109112 verified the exact implementation commit:
+
+```text
+Format, lint, and document
+PASS
+
+Check Rust 1.85 MSRV
+PASS
+
+Test stable on Linux x86_64
+PASS
+
+Test stable on Linux AArch64
+PASS
+
+Test stable on macOS AArch64
+PASS
+
+Test stable on Windows x86_64
+PASS
+
+Measure and upload coverage
+PASS
+
+Verify Agrona Java counter ABI with Java 17
+PASS
+```
+
+The first executions of the Linux x86_64 and macOS AArch64 jobs stopped in the
+unchanged `agent_allocation` test before reaching counter tests because its
+process-global allocator observed unrelated test-harness allocations. Both
+jobs passed on rerun; Linux AArch64 and Windows passed initially. No counter
+code or test was changed to obtain the successful rerun.
 
 ## Intentional adaptations and residual gaps
 
