@@ -31,3 +31,8 @@ are not required to use the crate.
   - [Specification](design/clock/CLOCK_SPEC.md)
   - [Evidence](design/clock/CLOCK_EVIDENCE.md)
   - [Traceability ledger](design/clock/clock_traceability.toml)
+- Counter-reader design:
+  - [Specification](design/counters/COUNTER_SPEC.md)
+  - [Implementation plan](design/counters/COUNTER_IMPLEMENTATION_PLAN.md)
+  - [Evidence](design/counters/COUNTER_EVIDENCE.md)
+  - [Traceability ledger](design/counters/counter_traceability.toml)

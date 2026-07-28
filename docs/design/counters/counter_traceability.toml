@@ -1,0 +1,232 @@
+# Maintainer traceability ledger for the counter-reader specification.
+schema_version = 1
+specification_baseline = "docs/design/counters/COUNTER_SPEC.md active, Agrona d4a47c67258f85b39910c4999da346ead655b736, Aeron e44cd27a3b357c27ad37f6107a957f46d95552ac"
+specification_files = ["docs/design/counters/COUNTER_SPEC.md"]
+
+[[requirements]]
+id = "CTR-LAYOUT-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-layout-001--exact-values-and-metadata-abi"
+parent_or_rationale = "DEC-COUNTER-001 byte-compatible counter regions"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["constants", "values-layout", "metadata-layout", "record-states", "capacity", "offsets"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/status/counters_reader.rs",
+    "src/concurrent/status/mod.rs",
+]
+evidence_state = "validated"
+evidence_links = [
+    "tests/counters_reader_layout.rs",
+    "tests/counters_reader_java_interop.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["constants", "values-layout", "metadata-layout", "record-states", "capacity", "offsets"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
+verified_environment = "GitHub Actions 30387109112: native Linux x86_64/AArch64, macOS AArch64, Windows x86_64, and pinned Agrona Java 17 interop"
+remaining_gaps = []
+
+[[requirements]]
+id = "CTR-VALID-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-valid-001--bounds-and-alignment-validation"
+parent_or_rationale = "Rust memory safety for external counter regions"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["record-boundaries", "metadata-ratio", "base-alignment", "capacity-range", "counter-id", "label-length"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/aligned_region.rs",
+    "src/concurrent/status/counters_reader.rs",
+    "src/concurrent/status/counters_reader_error.rs",
+]
+evidence_state = "validated"
+evidence_links = [
+    "tests/counters_reader_validation.rs",
+    "tests/counters_reader.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["record-boundaries", "metadata-ratio", "base-alignment", "capacity-range", "counter-id", "label-length"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
+verified_environment = "GitHub Actions 30387109112: native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
+remaining_gaps = []
+
+[[requirements]]
+id = "CTR-READ-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-read-001--value-and-identity-reads"
+parent_or_rationale = "Agrona CountersReader value and identity semantics"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["value-acquire", "registration-acquire", "owner-relaxed-adaptation", "reference-relaxed-adaptation", "lock-free-native", "zero-allocation"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/aligned_region.rs",
+    "src/concurrent/status/counters_reader.rs",
+]
+evidence_state = "validated"
+evidence_links = [
+    "tests/counters_reader.rs",
+    "tests/counters_reader_allocation.rs",
+    "tests/counters_reader_java_interop.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["value-acquire", "registration-acquire", "owner-relaxed-adaptation", "reference-relaxed-adaptation", "lock-free-native", "zero-allocation"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
+verified_environment = "GitHub Actions 30387109112: native Linux x86_64/AArch64, macOS AArch64, Windows x86_64, and zero-allocation test"
+remaining_gaps = []
+
+[[requirements]]
+id = "CTR-META-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-meta-001--metadata-publication-and-access"
+parent_or_rationale = "Agrona manager release publication and reader acquisition"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["state-acquire", "type", "reuse-deadline", "key-view", "label-length-acquire", "label-view", "publication-stress"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/aligned_region.rs",
+    "src/concurrent/status/counters_reader.rs",
+]
+evidence_state = "validated"
+evidence_links = [
+    "tests/counters_reader.rs",
+    "tests/counters_reader_iteration.rs",
+    "tests/counters_reader_publication.rs",
+    "tests/counters_reader_java_interop.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["state-acquire", "type", "reuse-deadline", "key-view", "label-length-acquire", "label-view", "publication-stress"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
+verified_environment = "GitHub Actions 30387109112: 4096-record publication stress on native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
+remaining_gaps = []
+
+[[requirements]]
+id = "CTR-ITER-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-iter-001--dense-enumeration-and-search"
+parent_or_rationale = "Agrona dense high-water-mark scan behavior"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["allocated", "skip-reclaimed", "first-unused", "capacity-bound", "counter-enumeration", "metadata-enumeration", "registration-search", "type-registration-search"]
+implementation_state = "implemented"
+implementation_links = ["src/concurrent/status/counters_reader.rs"]
+evidence_state = "validated"
+evidence_links = [
+    "tests/counters_reader_iteration.rs",
+    "tests/counters_reader_java_interop.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["allocated", "skip-reclaimed", "first-unused", "capacity-bound", "counter-enumeration", "metadata-enumeration", "registration-search", "type-registration-search"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
+verified_environment = "GitHub Actions 30387109112: native maintained-platform matrix and pinned Agrona Java 17 fixture"
+remaining_gaps = []
+
+[[requirements]]
+id = "CTR-LIFE-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-life-001--borrowed-region-lifetime-and-aliasing-safety"
+parent_or_rationale = "Rust lifetime and aliasing adaptation for caller-owned or mapped regions"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["borrowed-lifetime", "no-mutable-reference", "unsafe-confinement", "alignment-invariant", "initialization-invariant", "aliasing-invariant", "atomic-access-invariant"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/aligned_region.rs",
+    "src/concurrent/status/counters_reader.rs",
+]
+evidence_state = "validated"
+evidence_links = [
+    "src/concurrent/aligned_region.rs",
+    "tests/counters_reader_validation.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["borrowed-lifetime", "no-mutable-reference", "unsafe-confinement", "alignment-invariant", "initialization-invariant", "aliasing-invariant", "atomic-access-invariant"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
+verified_environment = "GitHub Actions 30387109112: native maintained-platform matrix; local complete unsafe source review"
+remaining_gaps = []
+
+[[requirements]]
+id = "CTR-ALLOC-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-alloc-001--zero-allocation-repeated-reads"
+parent_or_rationale = "low-latency steady-state reader profile"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["value", "identity", "metadata", "borrowed-bytes", "enumeration", "search"]
+implementation_state = "implemented"
+implementation_links = ["src/concurrent/status/counters_reader.rs"]
+evidence_state = "validated"
+evidence_links = [
+    "tests/counters_reader_allocation.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["value", "identity", "metadata", "borrowed-bytes", "enumeration", "search"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
+verified_environment = "GitHub Actions 30387109112: counting global allocator on native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
+remaining_gaps = []
+
+[[requirements]]
+id = "CTR-PORT-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-port-001--supported-platform-profile"
+parent_or_rationale = "agrona-rs maintained compiler and native platform profile"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["rust-1.85", "rust-2024", "native-atomic64", "three-os-ci", "x86_64-ci", "aarch64-ci"]
+implementation_state = "implemented"
+implementation_links = [
+    "Cargo.toml",
+    "src/concurrent/mod.rs",
+    ".github/workflows/ci.yml",
+]
+evidence_state = "validated"
+evidence_links = [
+    ".github/workflows/ci.yml",
+    "tests/counters_reader_publication.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["rust-1.85", "rust-2024", "native-atomic64", "three-os-ci", "x86_64-ci", "aarch64-ci"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
+verified_environment = "GitHub Actions 30387109112: Rust 1.85 MSRV plus stable native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
+remaining_gaps = []
+
+[[gates]]
+id = "COUNTER-READER"
+requirements = [
+    "CTR-LAYOUT-001",
+    "CTR-VALID-001",
+    "CTR-READ-001",
+    "CTR-META-001",
+    "CTR-ITER-001",
+    "CTR-LIFE-001",
+    "CTR-ALLOC-001",
+    "CTR-PORT-001",
+]
+state = "complete"
+acceptance_evidence = ["docs/design/counters/COUNTER_EVIDENCE.md"]
+
+[[gates]]
+id = "COUNTER-FAMILY"
+requirements = [
+    "CTR-LAYOUT-001",
+    "CTR-VALID-001",
+    "CTR-READ-001",
+    "CTR-META-001",
+    "CTR-ITER-001",
+    "CTR-LIFE-001",
+    "CTR-ALLOC-001",
+    "CTR-PORT-001",
+]
+state = "partial"
+acceptance_evidence = ["docs/design/counters/COUNTER_EVIDENCE.md"]

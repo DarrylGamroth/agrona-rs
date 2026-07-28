@@ -34,18 +34,26 @@ The Agent implementation maps to Agrona's `Agent`,
 `YieldingIdleStrategy`. The corresponding Rust implementation is under
 `src/agent/`; `DynamicCompositeAgent` is intentionally omitted.
 
+The read-only counter implementation maps to Agrona's `CountersReader` and
+its layout and publication contract in `CountersManager`, `AtomicCounter`,
+`AtomicBuffer`, and `UnsafeBuffer`. Aeron C counter descriptors and reader
+functions at commit `e44cd27a3b357c27ad37f6107a957f46d95552ac` cross-check
+the native ABI and ordering. The corresponding Rust implementation is under
+`src/concurrent/status/`; manager allocation and mutation remain unimplemented.
+
 ## Reference hierarchy
 
 Agrona Java at the commit above is the normative behavioral reference for
 selected ports.
 
-The Agent design also reviews Aeron C at commit
+The Agent and counter designs also review Aeron C at commit
 `e44cd27a3b357c27ad37f6107a957f46d95552ac` as an implementation reference for
-native ownership, thread lifecycle, atomic stop publication, and idle
-primitives. The applicable files are
-`aeron-client/src/main/c/aeron_agent.h` and
-`aeron-client/src/main/c/aeron_agent.c`. Aeron C does not override Agrona Java
-behavior or defaults.
+native ownership, thread lifecycle, atomic stop publication, idle primitives,
+and counter layout and native ordering. The applicable files include
+`aeron-client/src/main/c/aeron_agent.h`,
+`aeron-client/src/main/c/aeron_agent.c`, `aeron-client/src/main/c/aeronc.h`,
+and `aeron-client/src/main/c/concurrent/aeron_counters_manager.{h,c}`. Aeron C
+does not override Agrona Java behavior or defaults.
 
 The sibling Julia packages are examples of language-specific ports:
 

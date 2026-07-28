@@ -15,6 +15,8 @@ supported platform set changes.
 | Compatibility | Minimum Rust version | Rust 1.85 | `msrv` job in `.github/workflows/ci.yml` | Covered in configuration | This matches `package.rust-version` in `Cargo.toml`. |
 | Coverage | Instrumented test suite | Linux stable | `coverage` job in `.github/workflows/ci.yml`; `codecov.yml` | Covered in configuration | `cargo-llvm-cov` emits LCOV and Codecov enforces project and patch status checks. |
 | Features | Cargo feature set | All features | Every Cargo command in `.github/workflows/ci.yml` | Covered | The crate currently declares no optional features, so this is a single permutation. |
+| Counter ABI | Agrona Java producer, Rust reader | Agrona `d4a47c67258f85b39910c4999da346ead655b736`, Java 17, native-endian Linux x86_64 | `java-counter-interop` job in `.github/workflows/ci.yml` | Covered in configuration | CI regenerates both regions with the actual pinned Agrona jar, compares the committed fixture byte for byte, and runs the Rust interop test. |
+| Counter publication | Native memory ordering | Linux x86_64, Linux AArch64, macOS AArch64, Windows x86_64 | `tests/counters_reader_publication.rs` in the native test matrix | Covered in configuration | Cross-architecture evidence remains pending until the delivered revision passes CI; local x86_64 alone does not establish AArch64 behavior. |
 
 Dependabot checks both Cargo dependencies and GitHub Actions weekly via
 `.github/dependabot.yml`.
