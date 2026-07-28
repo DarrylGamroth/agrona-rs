@@ -119,3 +119,49 @@ fn rejects_negative_and_oversized_label_lengths() {
         );
     }
 }
+
+#[test]
+fn errors_have_actionable_rust_display_messages() {
+    let errors = [
+        CountersReaderError::PartialRecord {
+            region: "values",
+            length: 127,
+            record_length: 128,
+        },
+        CountersReaderError::MetadataTooSmall {
+            actual: 511,
+            required: 512,
+        },
+        CountersReaderError::MisalignedRegion {
+            region: "metadata",
+            address: 1,
+            required_alignment: 8,
+        },
+        CountersReaderError::CapacityTooLarge {
+            capacity: i32::MAX as usize + 2,
+            maximum_capacity: i32::MAX as usize + 1,
+        },
+        CountersReaderError::CounterIdOutOfRange {
+            counter_id: -1,
+            max_counter_id: 0,
+        },
+        CountersReaderError::OffsetOverflow {
+            counter_id: i32::MAX,
+            record_length: usize::MAX,
+        },
+        CountersReaderError::MalformedLabelLength {
+            counter_id: 0,
+            label_length: 381,
+            maximum_length: CountersReader::MAX_LABEL_LENGTH,
+        },
+        CountersReaderError::RegionSizeOverflow {
+            values_length: usize::MAX,
+        },
+    ];
+
+    for error in errors {
+        let message = error.to_string();
+        assert!(!message.is_empty());
+        assert!(message.chars().any(char::is_numeric));
+    }
+}

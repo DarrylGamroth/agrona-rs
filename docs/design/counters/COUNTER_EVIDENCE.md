@@ -142,8 +142,9 @@ PASS
 
 cargo llvm-cov --workspace --all-features --summary-only
 PASS
-TOTAL: 92.67% lines, 97.34% functions, 93.21% regions
+TOTAL: 95.01% lines, 97.87% functions, 95.93% regions
 CountersReader: 94.93% lines
+CountersReaderError: 100.00% lines
 AlignedRegion unsafe substrate: 100.00% lines
 
 git diff --check
