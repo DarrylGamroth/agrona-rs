@@ -129,6 +129,50 @@ impl<'a> CountersReader<'a> {
         })
     }
 
+    pub(super) fn from_aligned(
+        metadata: AlignedRegion<'a>,
+        values: AlignedRegion<'a>,
+        max_counter_id: i32,
+    ) -> Self {
+        Self {
+            metadata,
+            values,
+            max_counter_id,
+        }
+    }
+
+    pub(super) fn validate_values_region(values: &[u8]) -> Result<i32, CountersReaderError> {
+        Self::validate_record_boundary("values", values.len(), Self::COUNTER_LENGTH)?;
+        let capacity = values.len() / Self::COUNTER_LENGTH;
+        let maximum_capacity = i32::MAX as usize + 1;
+        if capacity > maximum_capacity {
+            return Err(CountersReaderError::CapacityTooLarge {
+                capacity,
+                maximum_capacity,
+            });
+        }
+        let max_counter_id = if capacity == 0 {
+            Self::NULL_COUNTER_ID
+        } else {
+            i32::try_from(capacity - 1).expect("validated counter capacity")
+        };
+        AlignedRegion::new("values", values)?;
+        Ok(max_counter_id)
+    }
+
+    pub(super) fn validate_id(
+        counter_id: i32,
+        max_counter_id: i32,
+    ) -> Result<(), CountersReaderError> {
+        if counter_id < 0 || counter_id > max_counter_id {
+            return Err(CountersReaderError::CounterIdOutOfRange {
+                counter_id,
+                max_counter_id,
+            });
+        }
+        Ok(())
+    }
+
     /// Return the greatest counter ID supported by the values region.
     ///
     /// An empty values region returns `-1`, matching Agrona.
@@ -139,16 +183,6 @@ impl<'a> CountersReader<'a> {
     /// Return the number of complete values records.
     pub fn capacity(&self) -> usize {
         (self.max_counter_id as i64 + 1) as usize
-    }
-
-    /// Return the borrowed metadata region.
-    pub fn metadata_region(&self) -> &'a [u8] {
-        self.metadata.as_slice()
-    }
-
-    /// Return the borrowed values region.
-    pub fn values_region(&self) -> &'a [u8] {
-        self.values.as_slice()
     }
 
     /// Calculate the values-record offset for a non-negative counter ID.
@@ -226,7 +260,7 @@ impl<'a> CountersReader<'a> {
     }
 
     /// Borrow the complete 112-byte key after acquiring the record state.
-    pub fn counter_key(&self, counter_id: i32) -> Result<&'a [u8], CountersReaderError> {
+    pub fn counter_key(&self, counter_id: i32) -> Result<&[u8], CountersReaderError> {
         let offset = self.checked_metadata_offset(counter_id)?;
         self.acquire_record(offset);
         Ok(self
@@ -235,7 +269,7 @@ impl<'a> CountersReader<'a> {
     }
 
     /// Borrow the published label bytes after acquiring state and label length.
-    pub fn counter_label(&self, counter_id: i32) -> Result<&'a [u8], CountersReaderError> {
+    pub fn counter_label(&self, counter_id: i32) -> Result<&[u8], CountersReaderError> {
         let offset = self.checked_metadata_offset(counter_id)?;
         self.acquire_record(offset);
         self.label_at(counter_id, offset)
@@ -247,7 +281,7 @@ impl<'a> CountersReader<'a> {
     /// record. Callback allocation, if any, is owned by the caller.
     pub fn for_each_counter(
         &self,
-        mut consumer: impl FnMut(i64, i32, &'a [u8]),
+        mut consumer: impl FnMut(i64, i32, &[u8]),
     ) -> Result<(), CountersReaderError> {
         for counter_id in 0..self.capacity() {
             let counter_id = counter_id as i32;
@@ -275,7 +309,7 @@ impl<'a> CountersReader<'a> {
     /// record. Callback allocation, if any, is owned by the caller.
     pub fn for_each_metadata(
         &self,
-        mut consumer: impl FnMut(i32, i32, &'a [u8], &'a [u8]),
+        mut consumer: impl FnMut(i32, i32, &[u8], &[u8]),
     ) -> Result<(), CountersReaderError> {
         for counter_id in 0..self.capacity() {
             let counter_id = counter_id as i32;
@@ -381,14 +415,7 @@ impl<'a> CountersReader<'a> {
 
     #[inline]
     fn validate_counter_id(&self, counter_id: i32) -> Result<(), CountersReaderError> {
-        if counter_id < 0 || counter_id > self.max_counter_id {
-            return Err(CountersReaderError::CounterIdOutOfRange {
-                counter_id,
-                max_counter_id: self.max_counter_id,
-            });
-        }
-
-        Ok(())
+        Self::validate_id(counter_id, self.max_counter_id)
     }
 
     #[inline]
@@ -413,7 +440,7 @@ impl<'a> CountersReader<'a> {
         &self,
         counter_id: i32,
         metadata_offset: usize,
-    ) -> Result<&'a [u8], CountersReaderError> {
+    ) -> Result<&[u8], CountersReaderError> {
         let label_length = self.metadata.load_i32(
             metadata_offset + Self::LABEL_LENGTH_OFFSET,
             Ordering::Acquire,

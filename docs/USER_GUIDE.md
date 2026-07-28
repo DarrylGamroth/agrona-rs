@@ -3,8 +3,9 @@
 `agrona-rs` is an unofficial, idiomatic Rust port of selected
 [Agrona](https://github.com/aeron-io/agrona) low-latency components. The
 current crate provides clocks, a synchronous Agent framework, static Agent
-composition, all seven Agrona idle strategies, and a read-only
-Agrona-compatible counter-buffer reader.
+composition, all seven Agrona idle strategies, and Agrona-compatible counter
+reading, single-owner management, atomic values, positions, and status
+indicators.
 
 This is not an async runtime or a general actor framework. An Agent is a
 single-owner duty cycle: one thread repeatedly asks it to do a bounded amount
@@ -108,7 +109,7 @@ Use `OffsetEpochNanoClockConfig` and `OffsetEpochNanoClock::with_sources` when
 you need custom sampling thresholds, resampling intervals, or deterministic
 clock sources for a test.
 
-## Counter reader
+## Counters
 
 `CountersReader` reads the exact Agrona/Aeron counter values and metadata ABI
 from two caller-owned byte regions. The values region determines capacity and
@@ -116,57 +117,73 @@ uses 128-byte records; the metadata region uses 512-byte records and must be
 at least four times as long.
 
 The bases must be naturally aligned. Do not assume that `Vec<u8>` satisfies
-that requirement. An owned buffer or read-only memory mapping can retain its
-storage and lend aligned slices to the reader:
+that requirement. An owner can retain aligned storage and lend its regions to
+the single-owner manager:
 
 ```rust
-use agrona::concurrent::status::CountersReader;
+use agrona::concurrent::status::{CountersManager, CountersReader};
 
 #[repr(align(8))]
 struct Aligned<const N: usize>([u8; N]);
 
-let mut metadata = Aligned([0; CountersReader::METADATA_LENGTH]);
-let mut values = Aligned([0; CountersReader::COUNTER_LENGTH]);
+let mut metadata =
+    Aligned([0; 2 * CountersReader::METADATA_LENGTH]);
+let mut values =
+    Aligned([0; 2 * CountersReader::COUNTER_LENGTH]);
+let mut manager = CountersManager::new(&mut metadata.0, &mut values.0)?;
 
-metadata.0[CountersReader::STATE_OFFSET
-    ..CountersReader::STATE_OFFSET + size_of::<i32>()]
-    .copy_from_slice(&CountersReader::RECORD_ALLOCATED.to_ne_bytes());
-metadata.0[CountersReader::TYPE_ID_OFFSET
-    ..CountersReader::TYPE_ID_OFFSET + size_of::<i32>()]
-    .copy_from_slice(&7_i32.to_ne_bytes());
-metadata.0[CountersReader::LABEL_LENGTH_OFFSET
-    ..CountersReader::LABEL_LENGTH_OFFSET + size_of::<i32>()]
-    .copy_from_slice(&5_i32.to_ne_bytes());
-metadata.0[CountersReader::LABEL_VALUE_OFFSET
-    ..CountersReader::LABEL_VALUE_OFFSET + 5]
-    .copy_from_slice(b"items");
-values.0[CountersReader::COUNTER_VALUE_OFFSET
-    ..CountersReader::COUNTER_VALUE_OFFSET + size_of::<i64>()]
-    .copy_from_slice(&42_i64.to_ne_bytes());
+let counter = manager.new_counter_raw(7, Some(b"orders"), b"items")?;
+manager.set_counter_registration_id(counter.id(), 101)?;
+counter.set_release(42);
 
-let reader = CountersReader::new(&metadata.0, &values.0)?;
-assert_eq!(42, reader.counter_value(0)?);
+let reader = manager.reader();
+assert_eq!(42, reader.counter_value(counter.id())?);
 assert_eq!(7, reader.counter_type_id(0)?);
 assert_eq!(b"items", reader.counter_label(0)?);
+assert_eq!(101, reader.counter_registration_id(0)?);
+drop(reader);
+
+// Closing is local. Registry reclamation is explicit.
+counter.close();
+manager.free(counter.id())?;
 
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
-Counter values, registration IDs, record state, and label length use acquire
-loads. Owner IDs, reference IDs, type IDs, and reuse deadlines use the
-weakest Rust atomic ordering corresponding to upstream plain reads. The
-reader uses no mutex and repeated reads allocate nothing.
+`CountersManager` is not thread-safe: keep allocation, free, key, and label
+changes with one owner. It contains no mutex. `AtomicCounter` handles can be
+shared between threads for atomic value operations. Multi-writer operations
+such as `increment`, `get_and_add`, `get_and_set`, and `compare_and_set` do
+not lose updates. The `release`, `opaque`, `plain`, and `propose_max` update
+families are single-writer operations and can lose updates when called by
+multiple writers, as in Agrona.
+
+Pair `set_release` with `get_acquire` for publication. Volatile-style methods
+use sequentially consistent Rust atomics. Java plain and opaque integral
+accesses use relaxed Rust atomics because safe Rust cannot express a racy
+non-atomic access. Repeated counter, position, status, and reader operations
+allocate nothing.
 
 `counter_key` returns the complete 112-byte key area and `counter_label`
 returns only the validated published label bytes. Both are zero-copy borrowed
 views. Enumeration visits allocated records, skips reclaimed records, and
 stops at the first unused record.
 
+`AtomicLongPosition` is a process-local position. `UnsafeBufferPosition` and
+`UnsafeBufferStatusIndicator` place their value at the exact Agrona counter
+offset. Their behavior is exposed through the `ReadablePosition`, `Position`,
+`StatusIndicatorReader`, and `StatusIndicator` traits.
+
+Closing a counter or buffer position does not free its registry record.
+Call `CountersManager::free` only after every old handle is quiescent. A stale
+handle still addresses the same slot and therefore observes or mutates a
+later allocation if the ID is reused. Registration IDs are reset on reuse so
+applications can detect this ABA lifecycle.
+
 This API neither creates nor owns a memory mapping. The caller must keep both
-regions alive and must follow the documented aliasing and publication rules.
-The crate does not yet provide `CountersManager`, `AtomicCounter`,
-position/status wrappers, an Aeron CnC parser, or application-specific
-counter type IDs and keys.
+regions alive and follow the documented aliasing and publication rules. The
+crate does not provide `ConcurrentCountersManager`, an Aeron CnC parser,
+mapping ownership, or application-specific counter type IDs and keys.
 
 ## Agents
 

@@ -1,4 +1,4 @@
-# Maintainer traceability ledger for the counter-reader specification.
+# Maintainer traceability ledger for the counter-infrastructure specification.
 schema_version = 1
 specification_baseline = "docs/design/counters/COUNTER_SPEC.md active, Agrona d4a47c67258f85b39910c4999da346ead655b736, Aeron e44cd27a3b357c27ad37f6107a957f46d95552ac"
 specification_files = ["docs/design/counters/COUNTER_SPEC.md"]
@@ -201,6 +201,244 @@ verified_revision = "bc3e2ee471aedaa62c879f5dac01d191aa887bbe"
 verified_environment = "GitHub Actions 30387109112: Rust 1.85 MSRV plus stable native Linux x86_64/AArch64, macOS AArch64, and Windows x86_64"
 remaining_gaps = []
 
+[[requirements]]
+id = "CTR-MGR-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-mgr-001--single-owner-manager-construction-and-capacity"
+parent_or_rationale = "selected mutable continuation of DEC-COUNTER-001"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["checked-regions", "single-owner", "capacity", "available", "clock", "reuse-timeout", "no-lock"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/status/counters_manager.rs",
+    "src/concurrent/status/counters_manager_error.rs",
+    "src/concurrent/aligned_region.rs",
+]
+evidence_state = "partial"
+evidence_links = ["tests/counters_manager.rs", "docs/design/counters/COUNTER_EVIDENCE.md"]
+verified_obligations = ["checked-regions", "single-owner", "capacity", "available", "clock", "reuse-timeout", "no-lock"]
+verified_surfaces = ["std-linux", "native-x86_64"]
+verified_revision = ""
+verified_environment = "local acceptance on Linux x86_64; post-merge native matrix pending"
+remaining_gaps = ["post-merge maintained-platform evidence pending"]
+
+[[requirements]]
+id = "CTR-ALLOC-002"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-alloc-002--counter-allocation-and-publication"
+parent_or_rationale = "Agrona CountersManager allocation and dense publication behavior"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["reuse-first", "high-water-mark", "full", "metadata-initialization", "key", "label", "rollback", "state-release"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/status/counters_manager.rs",
+    "src/concurrent/aligned_region.rs",
+]
+evidence_state = "partial"
+evidence_links = [
+    "tests/counters_manager.rs",
+    "tests/counters_reader_publication.rs",
+    "tests/counters_reader_java_interop.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["reuse-first", "high-water-mark", "full", "metadata-initialization", "key", "label", "rollback", "state-release"]
+verified_surfaces = ["std-linux", "native-x86_64"]
+verified_revision = ""
+verified_environment = "local acceptance and pinned Java interop on Linux x86_64; native matrix pending"
+remaining_gaps = ["post-merge native x86_64/AArch64 publication evidence pending"]
+
+[[requirements]]
+id = "CTR-REUSE-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-reuse-001--reclamation-cooldown-and-aba-identity-reset"
+parent_or_rationale = "Agrona counter lifecycle and safe counter-ID reuse"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["invalid-free", "double-free", "reclaimed-release", "key-clear", "deadline", "cooldown", "identity-reset", "value-reset"]
+implementation_state = "implemented"
+implementation_links = ["src/concurrent/status/counters_manager.rs"]
+evidence_state = "partial"
+evidence_links = [
+    "tests/counters_manager.rs",
+    "tests/atomic_counter.rs",
+    "tests/counters_reader_java_interop.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["invalid-free", "double-free", "reclaimed-release", "key-clear", "deadline", "cooldown", "identity-reset", "value-reset"]
+verified_surfaces = ["std-linux", "native-x86_64"]
+verified_revision = ""
+verified_environment = "local acceptance and pinned Java interop on Linux x86_64; native matrix pending"
+remaining_gaps = ["post-merge native x86_64/AArch64 evidence pending"]
+
+[[requirements]]
+id = "CTR-MUTATE-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-mutate-001--manager-metadata-and-identity-mutation"
+parent_or_rationale = "Agrona manager mutation and publication behavior"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["value-release", "registration-release", "owner-relaxed", "reference-relaxed", "key-bound", "label-truncate", "label-append", "label-release"]
+implementation_state = "implemented"
+implementation_links = ["src/concurrent/status/counters_manager.rs"]
+evidence_state = "partial"
+evidence_links = ["tests/counters_manager.rs", "docs/design/counters/COUNTER_EVIDENCE.md"]
+verified_obligations = ["value-release", "registration-release", "owner-relaxed", "reference-relaxed", "key-bound", "label-truncate", "label-append", "label-release"]
+verified_surfaces = ["std-linux", "native-x86_64"]
+verified_revision = ""
+verified_environment = "local acceptance on Linux x86_64; native matrix pending"
+remaining_gaps = ["post-merge native x86_64/AArch64 publication evidence pending"]
+
+[[requirements]]
+id = "CTR-ATOM-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-atom-001--atomiccounter-operations-and-ordering"
+parent_or_rationale = "Agrona AtomicCounter value semantics on Rust atomics"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["construction", "seqcst", "acquire-release", "plain-relaxed", "opaque-relaxed", "multi-writer-rmw", "single-writer-update", "wrapping", "zero-allocation"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/status/atomic_counter.rs",
+    "src/concurrent/aligned_region.rs",
+]
+evidence_state = "partial"
+evidence_links = [
+    "tests/atomic_counter.rs",
+    "tests/counter_value_allocation.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["construction", "seqcst", "acquire-release", "plain-relaxed", "opaque-relaxed", "multi-writer-rmw", "single-writer-update", "wrapping", "zero-allocation"]
+verified_surfaces = ["std-linux", "native-x86_64"]
+verified_revision = ""
+verified_environment = "local operation, concurrency, publication, and allocation acceptance on Linux x86_64; native matrix pending"
+remaining_gaps = ["post-merge native x86_64/AArch64 evidence pending"]
+
+[[requirements]]
+id = "CTR-ATOM-LIFE-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-atom-life-001--rust-counter-handle-lifecycle"
+parent_or_rationale = "safe Rust ownership adaptation for a thread-shareable counter and single-owner manager"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
+closure_obligations = ["borrowed-storage", "send-sync", "close", "explicit-free", "stale-handle", "documentation"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/status/atomic_counter.rs",
+    "src/concurrent/status/counters_manager.rs",
+    "docs/USER_GUIDE.md",
+]
+evidence_state = "partial"
+evidence_links = ["tests/atomic_counter.rs", "docs/design/counters/COUNTER_EVIDENCE.md"]
+verified_obligations = ["borrowed-storage", "send-sync", "close", "explicit-free", "stale-handle", "documentation"]
+verified_surfaces = ["std-linux"]
+verified_revision = ""
+verified_environment = "local lifecycle and scoped-thread acceptance on Linux x86_64; maintained-platform matrix pending"
+remaining_gaps = ["post-merge maintained-platform evidence pending"]
+
+[[requirements]]
+id = "CTR-POS-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-pos-001--process-local-position-contract"
+parent_or_rationale = "Agrona ReadablePosition, Position, and AtomicLongPosition behavior"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["traits", "constructors", "ordering", "propose-max", "close", "publication", "zero-allocation"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/status/readable_position.rs",
+    "src/concurrent/status/position.rs",
+    "src/concurrent/status/atomic_long_position.rs",
+]
+evidence_state = "partial"
+evidence_links = [
+    "tests/counter_positions.rs",
+    "tests/counter_value_allocation.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["traits", "constructors", "ordering", "propose-max", "close", "publication", "zero-allocation"]
+verified_surfaces = ["std-linux", "native-x86_64"]
+verified_revision = ""
+verified_environment = "local contract and allocation acceptance on Linux x86_64; native matrix pending"
+remaining_gaps = ["post-merge native x86_64/AArch64 evidence pending"]
+
+[[requirements]]
+id = "CTR-BUF-POS-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-buf-pos-001--counter-buffer-position-contract"
+parent_or_rationale = "Agrona UnsafeBufferPosition behavior over the counter ABI"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["abi-offset", "validation", "ordering", "propose-max", "close", "explicit-free", "publication"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/status/unsafe_buffer_position.rs",
+    "src/concurrent/status/atomic_counter.rs",
+]
+evidence_state = "partial"
+evidence_links = [
+    "tests/counter_positions.rs",
+    "tests/counter_value_allocation.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["abi-offset", "validation", "ordering", "propose-max", "close", "explicit-free", "publication"]
+verified_surfaces = ["std-linux", "native-x86_64"]
+verified_revision = ""
+verified_environment = "local offset, ordering, lifecycle, and allocation acceptance on Linux x86_64; native matrix pending"
+remaining_gaps = ["post-merge native x86_64/AArch64 evidence pending"]
+
+[[requirements]]
+id = "CTR-STATUS-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-status-001--counter-buffer-status-indicator-contract"
+parent_or_rationale = "Agrona status indicator behavior over the counter ABI"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux", "std-macos", "std-windows", "native-x86_64", "native-aarch64"]
+closure_obligations = ["traits", "abi-offset", "validation", "ordering", "publication", "zero-allocation"]
+implementation_state = "implemented"
+implementation_links = [
+    "src/concurrent/status/status_indicator_reader.rs",
+    "src/concurrent/status/status_indicator.rs",
+    "src/concurrent/status/unsafe_buffer_status_indicator.rs",
+]
+evidence_state = "partial"
+evidence_links = [
+    "tests/counter_positions.rs",
+    "tests/counter_value_allocation.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["traits", "abi-offset", "validation", "ordering", "publication", "zero-allocation"]
+verified_surfaces = ["std-linux", "native-x86_64"]
+verified_revision = ""
+verified_environment = "local offset, ordering, publication, and allocation acceptance on Linux x86_64; native matrix pending"
+remaining_gaps = ["post-merge native x86_64/AArch64 evidence pending"]
+
+[[requirements]]
+id = "CTR-INTEROP-001"
+source = "docs/design/counters/COUNTER_SPEC.md#ctr-interop-001--bidirectional-java-region-interoperability"
+parent_or_rationale = "byte-compatible mutable Agrona/Aeron counter-region claim"
+owner = "concurrent-status"
+applicability = "mandatory"
+claimed_surfaces = ["std-linux"]
+closure_obligations = ["java-producer", "rust-reader", "rust-producer", "java-reader", "allocated", "reclaimed", "reused", "max-key-label"]
+implementation_state = "implemented"
+implementation_links = [
+    "tests/interop/java/CountersReaderFixtureGenerator.java",
+    "scripts/generate_counters_reader_java_fixture.py",
+    ".github/workflows/ci.yml",
+]
+evidence_state = "partial"
+evidence_links = [
+    "tests/counters_reader_java_interop.rs",
+    "docs/design/counters/COUNTER_EVIDENCE.md",
+]
+verified_obligations = ["java-producer", "rust-reader", "rust-producer", "java-reader", "allocated", "reclaimed", "reused", "max-key-label"]
+verified_surfaces = ["std-linux"]
+verified_revision = ""
+verified_environment = "local pinned Agrona Java build, Java-to-Rust read, and Rust-to-Java validation on Linux x86_64"
+remaining_gaps = ["post-merge Java 17 interop evidence pending"]
+
 [[gates]]
 id = "COUNTER-READER"
 requirements = [
@@ -227,6 +465,16 @@ requirements = [
     "CTR-LIFE-001",
     "CTR-ALLOC-001",
     "CTR-PORT-001",
+    "CTR-MGR-001",
+    "CTR-ALLOC-002",
+    "CTR-REUSE-001",
+    "CTR-MUTATE-001",
+    "CTR-ATOM-001",
+    "CTR-ATOM-LIFE-001",
+    "CTR-POS-001",
+    "CTR-BUF-POS-001",
+    "CTR-STATUS-001",
+    "CTR-INTEROP-001",
 ]
 state = "partial"
 acceptance_evidence = ["docs/design/counters/COUNTER_EVIDENCE.md"]

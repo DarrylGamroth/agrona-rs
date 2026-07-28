@@ -31,12 +31,13 @@ Utilities Include:
   Agrona cursor and lifecycle behavior.
 * Idle strategies - Backoff, busy-spin, controllable, no-op, nanosecond
   sleeping, millisecond sleeping, and yielding strategies.
-* Counter reader - A checked, read-only view over byte-compatible Agrona/Aeron
+* Counter infrastructure - A checked reader, single-owner manager, atomic
+  values, positions, and status indicators over byte-compatible Agrona/Aeron
   counter metadata and values regions.
 
-`CountersManager`, `AtomicCounter`, positions/status wrappers, mappings,
-container formats, `DynamicCompositeAgent`, shared-memory controls, buffers,
-queues, and the other Agrona utility families are not currently implemented.
+`ConcurrentCountersManager`, mappings, container formats,
+`DynamicCompositeAgent`, shared-memory controls, buffers, queues, and the
+other Agrona utility families are not currently implemented.
 The runner's steady-state loop introduces no mutex, channel operation, or
 heap allocation. Shutdown remains cooperative, so blocking Agent code must
 provide an application-owned wakeup mechanism.
@@ -45,7 +46,8 @@ For the selected scope and compatibility decisions see the
 [Porting Plan](docs/design/PORTING_PLAN.md). Normative behavior and verification are
 recorded in the [Agent specification](docs/design/agent/AGENT_SPEC.md),
 [Agent evidence](docs/design/agent/AGENT_EVIDENCE.md), and
-[Clock evidence](docs/design/clock/CLOCK_EVIDENCE.md). Exact upstream revisions are in
+[Clock evidence](docs/design/clock/CLOCK_EVIDENCE.md), with the counter ABI in
+the [Counter specification](docs/design/counters/COUNTER_SPEC.md). Exact upstream revisions are in
 [UPSTREAM.md](UPSTREAM.md).
 
 Documentation
