@@ -12,9 +12,9 @@
 - Aeron C native comparison:
   `e44cd27a3b357c27ad37f6107a957f46d95552ac`.
 - Verified implementation:
-  `3b59551cfa6598c3c3fbcdf0d90d90f31891ef62`.
+  `df5304cc8fc4929ae9641333759f06be1938e645`.
 - GitHub Actions:
-  [run 30312017451](https://github.com/DarrylGamroth/agrona-rs/actions/runs/30312017451).
+  [run 30316185873](https://github.com/DarrylGamroth/agrona-rs/actions/runs/30316185873).
 - Local environment: Debian Linux 6.12.57, x86_64,
   `rustc 1.93.0 (254b59607 2026-01-19)`.
 - MSRV check: Rust 1.85.0.
@@ -32,7 +32,7 @@ x86_64 and AArch64 evidence for Linux, macOS, and Windows.
 | `AGT-INV-001` | Caller-owned, internally unlocked state machine; start-once, close-once, error, termination, and panic tests pass. |
 | `AGT-RUN-001` | Named dedicated thread, serialized lifecycle, and `idle(do_work())` loop; allocation instrumentation reports no steady-state allocations. |
 | `AGT-RUN-002` | Release/acquire cooperative stop, unpark, ownership-preserving spawn failure, structured panic return, and retry diagnostics all pass locally. |
-| `AGT-RUN-003` | Worker initialization ordering, recoverable failure, and fatal panic cleanup tests pass locally. Cross-platform CI remains pending for this post-baseline extension. |
+| `AGT-RUN-003` | Worker initialization ordering, recoverable failure, and fatal panic cleanup tests pass locally and across the complete native CI matrix. |
 | `AGT-COMP-001` | Non-empty construction, exact role, all-agent lifecycle attempts, and ordered aggregation pass. |
 | `AGT-COMP-002` | Pre-call cursor advance, resume-after-error, reset, wrapping `i32` sum, and allocation behavior pass. |
 | `AGT-IDLE-001` | Work-count, reset, idle-step, and alias contracts are exercised per component. |
@@ -104,7 +104,7 @@ affinity was set, and no dedicated-core or power-policy claim is made.
 
 ## GitHub CI results
 
-GitHub Actions run `30312017451` passed at verified revision `3b59551`:
+GitHub Actions run `30316185873` passed at verified revision `df5304c`:
 
 | Job | Result |
 |---|---|

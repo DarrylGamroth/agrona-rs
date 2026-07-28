@@ -121,13 +121,13 @@ claimed_surfaces = ["std-linux", "std-macos", "std-windows"]
 closure_obligations = ["worker-before-start", "initializer-error", "initializer-panic", "no-hot-path-change"]
 implementation_state = "implemented"
 implementation_links = ["src/agent/agent_runner.rs"]
-evidence_state = "local-validated"
+evidence_state = "validated"
 evidence_links = ["tests/agent_runner_thread_initializer.rs", "tests/agent_allocation.rs", "docs/design/agent/AGENT_EVIDENCE.md"]
 verified_obligations = ["worker-before-start", "initializer-error", "initializer-panic", "no-hot-path-change"]
-verified_surfaces = ["std-linux"]
-verified_revision = "working tree 2026-07-27"
-verified_environment = "Local Linux x86_64; Rust stable; full all-features test suite"
-remaining_gaps = ["GitHub native Linux AArch64, macOS, and Windows evidence"]
+verified_surfaces = ["std-linux", "std-macos", "std-windows"]
+verified_revision = "df5304cc8fc4929ae9641333759f06be1938e645"
+verified_environment = "GitHub Actions run 30316185873; Rust stable and 1.85.0; Linux x86_64/AArch64, macOS AArch64, Windows x86_64"
+remaining_gaps = []
 
 [[requirements]]
 id = "AGT-COMP-001"
@@ -282,6 +282,7 @@ requirements = [
     "AGT-INV-001",
     "AGT-RUN-001",
     "AGT-RUN-002",
+    "AGT-RUN-003",
     "AGT-COMP-001",
     "AGT-COMP-002",
     "AGT-IDLE-001",
