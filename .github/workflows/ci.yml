@@ -104,7 +104,7 @@ jobs:
           repository: aeron-io/agrona
           ref: d4a47c67258f85b39910c4999da346ead655b736
           path: upstream-agrona
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
